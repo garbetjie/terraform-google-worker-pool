@@ -1,6 +1,8 @@
 locals {
   is_regional_manager = length(split("-", var.location)) == 2
 
+  has_environment = length(var.env) > 0
+
   cloudinit_config = {
     write_files = concat(
       [{
@@ -12,6 +14,14 @@ locals {
           image = var.image
           args = var.args
         })
+      }, {
+        path = "/home/chronos/.env"
+        permissions = "0644"
+        owner = "chronos:chronos"
+        content = join("\n", concat([
+          for key, value in var.env:
+            "${key}=${value}"
+        ], [""]))
       }],
       length(var.cloudsql_connections) > 0 ? [{
         path = "/etc/systemd/system/cloudsql.service"
