@@ -3,6 +3,19 @@ locals {
 
   has_environment = length(var.env) > 0
 
+  default_log_opts = {
+    json-file = {
+      max-size = "50m"
+      max-file = "5"
+      compress = "true"
+    }
+    local = {
+      max-size = "50m"
+      max-file = "5"
+      compress = "true"
+    }
+  }
+
   cloudinit_config = {
     write_files = concat(
       [{
@@ -22,6 +35,13 @@ locals {
           for key, value in var.env:
             "${key}=${value}"
         ], [""]))
+      }, {
+        path = "/etc/docker/daemon.json",
+        permissions = "0644"
+        content = jsonencode({
+          log-driver = var.log_driver,
+          log-opts = var.log_opts != null ? var.log_opts : lookup(local.default_log_opts, var.log_driver, {})
+        })
       }],
       length(var.cloudsql_connections) > 0 ? [{
         path = "/etc/systemd/system/cloudsql.service"
@@ -32,6 +52,7 @@ locals {
 
     runcmd = [
       "systemctl daemon-reload",
+      "systemctl restart docker",
       "systemctl start $(printf 'worker@%02d ' $(seq 1 ${var.workers_per_instance}))"
     ]
   }

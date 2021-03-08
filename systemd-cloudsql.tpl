@@ -1,3 +1,7 @@
+[Unit]
+Requires=docker.service
+After=docker.service
+
 [Service]
 Type=simple
 Environment=HOME=/home/chronos

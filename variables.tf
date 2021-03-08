@@ -73,3 +73,13 @@ variable preemptible {
   type = bool
   default = true
 }
+
+variable log_driver {
+  type = string
+  default = "local"
+}
+
+variable log_opts {
+  type = map(string)
+  default = null
+}
