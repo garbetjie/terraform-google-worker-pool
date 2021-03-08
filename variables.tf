@@ -24,6 +24,11 @@ variable machine_type {
   default = "f1-micro"
 }
 
+variable worker_name_prefix {
+  type = string
+  default = "worker"
+}
+
 variable env {
   type = map(string)
   default = {}
@@ -82,4 +87,9 @@ variable log_driver {
 variable log_opts {
   type = map(string)
   default = null
+}
+
+variable timers {
+  type = list(object({ name = string, schedule = string, args = list(string) }))
+  default = []
 }

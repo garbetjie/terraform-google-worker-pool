@@ -1,8 +1,14 @@
 locals {
+  // Boolean indicating whether or not we're creating a regional instance group manager.
   is_regional_manager = length(split("-", var.location)) == 2
 
-  has_environment = length(var.env) > 0
+  // Are we making use of CloudSQL?
+  has_cloudsql = length(var.cloudsql_connections) > 0
 
+  // Extract just the timer names.
+  timer_unit_names = distinct([for timer in var.timers: "${timer.name}.timer"])
+
+  // Default log options.
   default_log_opts = {
     json-file = {
       max-size = "50m"
@@ -16,16 +22,18 @@ locals {
     }
   }
 
+  // cloud-init config.
   cloudinit_config = {
     write_files = concat(
       [{
         path = "/etc/systemd/system/worker@.service"
         permissions = "0644"
         content = templatefile("${path.module}/systemd-worker.tpl", {
-          cloudsql = length(var.cloudsql_connections) > 0,
+          cloudsql = local.has_cloudsql,
           cloudsql_path = var.cloudsql_path
           image = var.image
           args = var.args
+          prefix = var.worker_name_prefix
         })
       }, {
         path = "/home/chronos/.env"
@@ -43,17 +51,45 @@ locals {
           log-opts = var.log_opts != null ? var.log_opts : lookup(local.default_log_opts, var.log_driver, {})
         })
       }],
-      length(var.cloudsql_connections) > 0 ? [{
+
+      // Create the CloudSQL service.
+      local.has_cloudsql ? [{
         path = "/etc/systemd/system/cloudsql.service"
         permissions = "0644"
         content = templatefile("${path.module}/systemd-cloudsql.tpl", { connections = var.cloudsql_connections })
-      }] : []
+      }] : [],
+
+      // Create the timers.
+      [for timer in var.timers: {
+        path = "/etc/systemd/system/${timer.name}.timer"
+        permissions = "0644"
+        content = templatefile("${path.module}/systemd-timer.tpl", {
+          name = timer.name
+          schedule = timer.schedule
+        })
+      }],
+
+      // Create the services for the timers.
+      [for timer in var.timers: {
+        path = "/etc/systemd/system/${timer.name}.service",
+        permissions = "0644"
+        content = templatefile("${path.module}/systemd-timer-service.tpl", {
+          cloudsql = local.has_cloudsql
+          cloudsql_path = var.cloudsql_path
+          name = timer.name
+          image = var.image
+          args = timer.args
+        })
+      }]
     ),
 
-    runcmd = [
-      "systemctl daemon-reload",
-      "systemctl restart docker",
-      "systemctl start $(printf 'worker@%02d ' $(seq 1 ${var.workers_per_instance}))"
-    ]
+    runcmd = concat(
+      [
+        "systemctl daemon-reload",
+        "systemctl restart docker",
+        "systemctl start $(printf 'worker@%02d ' $(seq 1 ${var.workers_per_instance}))"
+      ],
+      length(local.timer_unit_names) > 0 ? ["systemctl start ${join(" ", local.timer_unit_names)}"]: []
+    )
   }
 }
