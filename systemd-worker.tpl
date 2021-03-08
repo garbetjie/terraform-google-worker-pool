@@ -10,9 +10,9 @@ RestartSec=3
 ExecStartPre=/usr/bin/docker-credential-gcr configure-docker
 ExecStart=/usr/bin/docker run \
   --rm \
-  --name=worker-%i \
+  --name=${prefix}-%i \
   --env-file /home/chronos/.env \
   ${cloudsql ? "-v cloudsql:${cloudsql_path}:ro" : ""} \
   ${image} \
   ${join(" ", args)}
-ExecStop=/usr/bin/docker stop worker-%i
+ExecStop=/usr/bin/docker stop ${prefix}-%i
