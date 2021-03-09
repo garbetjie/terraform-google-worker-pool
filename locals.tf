@@ -8,6 +8,21 @@ locals {
   // Extract just the timer names.
   timer_unit_names = distinct([for timer in var.timers: "${timer.name}.timer"])
 
+  // Format args as environment values.
+  worker_args = {
+    for key, value in var.args:
+      "ARG${key}" => value
+  }
+
+  // Format args as environment variables for timers.
+  timer_args = {
+    for timer in var.timers:
+      timer.name => {
+        for key, value in timer.args:
+          "ARG${key}" => value
+      }
+  }
+
   // Default log options.
   default_log_opts = {
     json-file = {
@@ -26,13 +41,13 @@ locals {
   cloudinit_config = {
     write_files = concat(
       [{
-        path = "/etc/systemd/system/worker@.service"
+        path = "/etc/systemd/system/${var.worker_name_prefix}@.service"
         permissions = "0644"
         content = templatefile("${path.module}/systemd-worker.tpl", {
           cloudsql = local.has_cloudsql,
           cloudsql_path = var.cloudsql_path
           image = var.image
-          args = var.args
+          args = local.worker_args
           prefix = var.worker_name_prefix
         })
       }, {
@@ -78,17 +93,14 @@ locals {
           cloudsql_path = var.cloudsql_path
           name = timer.name
           image = var.image
-          args = timer.args
+          args = local.timer_args[timer.name]
         })
       }]
     ),
 
     runcmd = concat(
-      [
-        "systemctl daemon-reload",
-        "systemctl restart docker",
-        "systemctl start $(printf 'worker@%02d ' $(seq 1 ${var.workers_per_instance}))"
-      ],
+      ["systemctl daemon-reload", "systemctl restart docker"],
+      var.workers_per_instance > 0 ? ["systemctl start $(printf '${var.worker_name_prefix}@%02d ' $(seq 1 ${var.workers_per_instance}))"] : [],
       length(local.timer_unit_names) > 0 ? ["systemctl start ${join(" ", local.timer_unit_names)}"]: []
     )
   }
