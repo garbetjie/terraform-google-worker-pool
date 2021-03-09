@@ -91,7 +91,7 @@ variable disk_type {
 
   validation {
     condition = contains(["pd-ssd", "local-ssd", "pd-balanced", "pd-standard"], var.disk_type)
-    error_message = "Disk type must be one of [pd-ssd, local-ssd, pd-balanced, pd-standard]"
+    error_message = "Disk type must be one of [pd-ssd, local-ssd, pd-balanced, pd-standard]."
   }
 }
 
