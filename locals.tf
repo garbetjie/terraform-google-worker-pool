@@ -41,14 +41,14 @@ locals {
   cloudinit_config = {
     write_files = concat(
       [{
-        path = "/etc/systemd/system/${var.worker_name_prefix}@.service"
+        path = "/etc/systemd/system/${var.worker_name}@.service"
         permissions = "0644"
         content = templatefile("${path.module}/systemd-worker.tpl", {
           cloudsql = local.has_cloudsql,
           cloudsql_path = var.cloudsql_path
           image = var.image
           args = local.worker_args
-          prefix = var.worker_name_prefix
+          prefix = var.worker_name
         })
       }, {
         path = "/home/chronos/.env"
@@ -100,7 +100,7 @@ locals {
 
     runcmd = concat(
       ["systemctl daemon-reload", "systemctl restart docker"],
-      var.workers_per_instance > 0 ? ["systemctl start $(printf '${var.worker_name_prefix}@%02d ' $(seq 1 ${var.workers_per_instance}))"] : [],
+      var.workers_per_instance > 0 ? ["systemctl start $(printf '${var.worker_name}@%02d ' $(seq 1 ${var.workers_per_instance}))"] : [],
       length(local.timer_unit_names) > 0 ? ["systemctl start ${join(" ", local.timer_unit_names)}"]: []
     )
   }

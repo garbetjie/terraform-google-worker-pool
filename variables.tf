@@ -30,7 +30,7 @@ variable machine_type {
   description = "Machine type to create the worker instances as."
 }
 
-variable worker_name_prefix {
+variable worker_name {
   type = string
   default = "worker"
   description = "Prefix to apply to containers and systemd services generated for workers."
