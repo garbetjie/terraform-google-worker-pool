@@ -86,8 +86,13 @@ variable disk_size {
 
 variable disk_type {
   type = string
-  default = "pd-standard"
+  default = "pd-balanced"
   description = "Disk type to create instances with."
+
+  validation {
+    condition = contains(["pd-ssd", "local-ssd", "pd-balanced", "pd-standard"], var.disk_type)
+    error_message = "Disk type must be one of [pd-ssd, local-ssd, pd-balanced, pd-standard]"
+  }
 }
 
 variable preemptible {
