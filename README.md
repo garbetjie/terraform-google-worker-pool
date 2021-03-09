@@ -116,14 +116,17 @@ The points listed below are features that have been considered for possible incl
 guarantees as to whether these features will ever make it into the final module:
 
 * **Sidecar containers.**
+  
   The ability to run arbitrary contains as sidecars on the instance.
   Not sure whether these should be limited to using the top-level image/env (like timers). 
   
 * **Autoscaling.**
+  
   Ideally, it would be great to be able to customise the instance group to scale automatically - either by custom
   Stackdriver metric, or by CPU usage. First prize would be to enable autoscaling by custom metric.
 
 * **Health checks for autohealing.**
+  
   It would be great to be able to implement [autohealing](https://cloud.google.com/compute/docs/instance-groups#autohealing)
   on created instances.
   
