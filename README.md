@@ -10,7 +10,7 @@ background workers running in a Docker container.
 * [Requirements](#requirements)
 * [Installation](#installation)
 * [Usage](#usage)
-  * CloudSQL
+  * [CloudSQL](#cloudsql)
   * [Timers](#timers)
   * [Argument escaping](#argument-escaping)
   * [Default log driver options](#default-log-driver-options)
@@ -51,6 +51,19 @@ module worker {
   image = "garbetjie/php:7.4-nginx"
 }
 ```
+
+## CloudSQL
+
+When specifying at least one CloudSQL connection in the `var.cloudsql_connections` input, an automatic dependency on
+CloudSQL is created for you - making it simple to securely connect to your CloudSQL instances.
+
+A `cloudsql.service` systemd unit is generated, and is added as a hard requirement to workers and timers - if the CloudSQL
+service fails to start, no workers or timers will run. Additionally, a volume is automatically mounted into all workers
+and timers at the directory specified by `var.cloudsql_path` that contains 
+
+By simply specifying the required connections, CloudSQL connectivity is automatically initiated for you.
+
+This requires the `roles/cloudsql.client` IAM role to be populated on the service account the instances run as.
 
 ## Timers
 
