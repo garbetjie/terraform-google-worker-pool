@@ -23,6 +23,9 @@ locals {
       }
   }
 
+  // Determine the actual log options to use.
+  log_opts = var.log_opts != null ? var.log_opts : lookup(local.default_log_opts, var.log_driver, {})
+
   // Default log options.
   default_log_opts = {
     json-file = {
@@ -63,7 +66,7 @@ locals {
         permissions = "0644"
         content = jsonencode({
           log-driver = var.log_driver,
-          log-opts = var.log_opts != null ? var.log_opts : lookup(local.default_log_opts, var.log_driver, {})
+          log-opts = local.log_opts
         })
       }],
 

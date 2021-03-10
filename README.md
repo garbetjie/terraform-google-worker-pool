@@ -10,11 +10,12 @@ background workers running in a Docker container.
 * [Requirements](#requirements)
 * [Installation](#installation)
 * [Usage](#usage)
-  * Timers
-  * Argument escaping
+  * CloudSQL
+  * [Timers](#timers)
+  * [Argument escaping](#argument-escaping)
   * [Default log driver options](#default-log-driver-options)
 * [Inputs](#inputs)
-* Outputs
+* [Outputs](#outputs)
 * [Roadmap](#roadmap)
 
 # Introduction
@@ -53,7 +54,26 @@ module worker {
 
 ## Timers
 
+Using timers in systemd is the way to schedule tasks that need to be run on a regular basis -  systemd's replacement for
+cron jobs. Timers in this module inherit the `var.image` and `var.env` values that are specified, and also inherits the
+CloudSQL dependency if `var.cloudsql_connections` is populated.
+
+When specifying the schedule on which timers should run, it is the
+[`OnCalendar`](https://www.freedesktop.org/software/systemd/man/systemd.timer.html#OnCalendar=) property that is populated.
+[This page](https://www.freedesktop.org/software/systemd/man/systemd.time.html#Calendar%20Events) contains more information
+on the allowed formats of this property.
+
 ## Argument escaping
+
+Arguments passed in `var.args` and `var.timers[].args` are escaped, and can safely contain spaces, strings and any number
+of values. How this is achieved is outlined below:
+
+Terraform provides no way to escape strings for use in shell scripts, and using regular expressions to accomplish this
+task is going to make it too complex and error-prone for the wide range of unexpected inputs that might be required.
+
+So, as per https://stackoverflow.com/questions/28881758/how-can-i-use-spaces-in-systemd-command-line-arguments, exporting 
+arguments as environment variables and using those environment variables in the argument list seems to be the generally
+accepted way of escaping arguments to systemd unit commands.
 
 ## Default log driver options
 
@@ -109,6 +129,16 @@ json-file = {
 | worker_name           | Name of the systemd unit used to run each worker. This is configurable to ensure it doesn't clash with names of timers.                                          | string                                                                  | `worker`      | No       |
 
 # Outputs
+
+All inputs are also exported as outputs. There are additional outputs as defined below:
+
+| Name                        | Description                                                                           | Type        |
+|-----------------------------|---------------------------------------------------------------------------------------|-------------|
+| regional_manager_self_link  | Self link of the instance group manager when a region is specified in `var.location`. | string      |
+| zonal_manager_self_link     | Self link of the instance group manager when a zone is specified in `var.location`.   | string      |
+| instance_template_self_link | Self link to the created instance template.                                           | string      |
+| is_regional                 | Flag indicating if a regional instance group manager was created.                     | bool        |
+| log_opts                    | Actual log options defined in the Docker `daemon.json` config file.                   | map(string) |
 
 # Roadmap
 
