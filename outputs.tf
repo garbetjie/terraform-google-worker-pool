@@ -90,6 +90,6 @@ output timers {
   value = var.timers
 }
 
-output worker_name {
-  value = var.worker_name
+output systemd_name {
+  value = var.systemd_name
 }
