@@ -1,6 +1,6 @@
 [Unit]
-Requires=docker.service ${cloudsql ? "cloudsql.service": ""}
-After=docker.service ${cloudsql ? "cloudsql.service": ""}
+Requires=docker.service ${requires_cloudsql ? "cloudsql.service": ""}
+After=docker.service ${requires_cloudsql ? "cloudsql.service": ""}
 
 [Service]
 Type=simple
