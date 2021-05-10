@@ -3,9 +3,9 @@ variable name {
   description = "Name of the pool."
 }
 
-variable workers_per_instance {
-  type = number
-  description = "Number of workers to start up per instance."
+variable image {
+  type = string
+  description = "Docker image on which the workers are based."
 }
 
 variable location {
@@ -13,57 +13,15 @@ variable location {
   description = "Zone or region in which to create the pool."
 }
 
-variable image {
-  type = string
-  description = "Docker image on which the workers are based."
-}
-
-variable service_account_email {
-  type = string
-  default = null
-  description = "Service account to assign to the pool."
-}
-
-variable machine_type {
-  type = string
-  default = "f1-micro"
-  description = "Machine type to create instances in the pool with."
-}
-
-variable systemd_name {
-  type = string
-  default = "worker"
-  description = "Name of the systemd service for workers."
-}
-
-variable env {
-  type = map(string)
-  default = {}
-  description = "Environment variables to inject into workers and timers."
-}
-
-variable labels {
-  type = map(string)
-  default = {}
-  description = "Labels to apply to all instances in the pool."
-}
-
-variable network {
-  type = string
-  default = "default"
-  description = "Network in which to create the pool."
-}
-
-variable instance_count {
+variable workers_per_instance {
   type = number
-  default = 1
-  description = "Number of instances to create in the pool."
+  description = "Number of workers to start up per instance."
 }
 
 variable args {
   type = list(string)
   default = []
-  description = "Arguments to pass to workers. Line breaks are not supported."
+  description = "Arguments to pass to workers. See README for line break support."
 }
 
 variable cloudsql_connections {
@@ -95,10 +53,22 @@ variable disk_type {
   }
 }
 
-variable preemptible {
-  type = bool
-  default = false
-  description = "Whether or not to create preemptible instances."
+variable env {
+  type = map(string)
+  default = {}
+  description = "Environment variables to inject into workers and timers."
+}
+
+variable instance_count {
+  type = number
+  default = 1
+  description = "Number of instances to create in the pool."
+}
+
+variable labels {
+  type = map(string)
+  default = {}
+  description = "Labels to apply to all instances in the pool."
 }
 
 variable log_driver {
@@ -113,13 +83,43 @@ variable log_opts {
   description = "Options for configured log driver."
 }
 
+variable machine_type {
+  type = string
+  default = "f1-micro"
+  description = "Machine type to create instances in the pool with."
+}
+
+variable network {
+  type = string
+  default = "default"
+  description = "Network name or link in which to create the pool."
+}
+
+variable preemptible {
+  type = bool
+  default = false
+  description = "Whether or not to create preemptible instances."
+}
+
+variable service_account_email {
+  type = string
+  default = null
+  description = "Service account to assign to the pool."
+}
+
+variable systemd_name {
+  type = string
+  default = "worker"
+  description = "Name of the systemd service for workers."
+}
+
 variable timers {
   type = list(
-    object({
-      name = string,
-      schedule = string,
-      args = optional(list(string))
-    })
+  object({
+    name = string,
+    schedule = string,
+    args = optional(list(string))
+  })
   )
   default = []
   description = "Scheduled timers to execute on instances."

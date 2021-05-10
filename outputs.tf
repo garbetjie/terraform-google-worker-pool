@@ -10,7 +10,7 @@ output instance_template_self_link {
   value = google_compute_instance_template.template.self_link
 }
 
-output is_regional {
+output regional {
   value = local.is_regional_manager
 }
 
@@ -67,7 +67,7 @@ output log_driver {
 }
 
 output log_opts {
-  value = local.log_opts
+  value = var.log_opts
 }
 
 output machine_type {
@@ -86,10 +86,10 @@ output service_account_email {
   value = var.service_account_email
 }
 
-output timers {
-  value = var.timers
-}
-
 output systemd_name {
   value = var.systemd_name
+}
+
+output timers {
+  value = var.timers
 }
