@@ -33,12 +33,12 @@ locals {
   default_log_opts = {
     json-file = {
       max-size = "50m"
-      max-file = "5"
+      max-file = "10"
       compress = "true"
     }
     local = {
       max-size = "50m"
-      max-file = "5"
+      max-file = "10"
       compress = "true"
     }
   }
