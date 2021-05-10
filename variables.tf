@@ -1,6 +1,6 @@
 variable name {
   type = string
-  description = "Name of the worker group."
+  description = "Name of the pool."
 }
 
 variable workers_per_instance {
@@ -10,30 +10,30 @@ variable workers_per_instance {
 
 variable location {
   type = string
-  description = "Zone or region in which to run the workers."
+  description = "Zone or region in which to create the pool."
 }
 
 variable image {
   type = string
-  description = "Docker image to use to run the workers."
+  description = "Docker image on which the workers are based."
 }
 
 variable service_account_email {
   type = string
   default = null
-  description = "Service account to assign to the worker instances."
+  description = "Service account to assign to the pool."
 }
 
 variable machine_type {
   type = string
   default = "f1-micro"
-  description = "Machine type to create the worker instances as."
+  description = "Machine type to create instances in the pool with."
 }
 
-variable worker_name {
+variable systemd_name {
   type = string
   default = "worker"
-  description = "Prefix to apply to containers and systemd services generated for workers."
+  description = "Name of the systemd service for workers."
 }
 
 variable env {
@@ -45,25 +45,25 @@ variable env {
 variable labels {
   type = map(string)
   default = {}
-  description = "Labels to apply to all instances in the group."
+  description = "Labels to apply to all instances in the pool."
 }
 
 variable network {
   type = string
   default = "default"
-  description = "Network in which to create worker instances."
+  description = "Network in which to create the pool."
 }
 
 variable instance_count {
   type = number
   default = 1
-  description = "Number of instances to create."
+  description = "Number of instances to create in the pool."
 }
 
 variable args {
   type = list(string)
   default = []
-  description = "Arguments to pass to workers. Not currently escaped."
+  description = "Arguments to pass to workers. Line breaks are not supported."
 }
 
 variable cloudsql_connections {
@@ -75,7 +75,7 @@ variable cloudsql_connections {
 variable cloudsql_path {
   type = string
   default = "/cloudsql"
-  description = "The path into the workers and timers will have CloudSQL connections mounted."
+  description = "The path at which CloudSQL connection sockets will be available in workers and timers."
 }
 
 variable disk_size {
@@ -97,7 +97,7 @@ variable disk_type {
 
 variable preemptible {
   type = bool
-  default = true
+  default = false
   description = "Whether or not to create preemptible instances."
 }
 
@@ -110,11 +110,17 @@ variable log_driver {
 variable log_opts {
   type = map(string)
   default = null
-  description = "Options for configured log driver. Sensible defaults are used."
+  description = "Options for configured log driver."
 }
 
 variable timers {
-  type = list(object({ name = string, schedule = string, args = list(string) }))
+  type = list(
+    object({
+      name = string,
+      schedule = string,
+      args = optional(list(string))
+    })
+  )
   default = []
-  description = "Scheduled timers to execute on the worker (also known as crons)."
+  description = "Scheduled timers to execute on instances."
 }
