@@ -14,7 +14,7 @@ ExecStart=/usr/bin/docker run \
   --rm \
   --name=${systemd_name}-%i \
   --env-file /home/chronos/.env \
-  ${cloudsql ? "-v cloudsql:${cloudsql_path}:ro" : ""} \
+  ${requires_cloudsql ? "-v cloudsql:${cloudsql_path}:ro" : ""} \
   ${image} \
   ${join(" ", formatlist("$${%s}", keys(args)))}
 ExecStop=/usr/bin/docker stop ${systemd_name}-%i
