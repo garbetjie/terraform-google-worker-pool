@@ -6,11 +6,12 @@ resource google_compute_region_instance_group_manager manager {
   region = var.location
   target_size = var.instance_count
   wait_for_instances = true
+  distribution_policy_zones = data.google_compute_zones.regional_zones.names
 
   update_policy {
     minimal_action = "REPLACE"
     type = "PROACTIVE"
-    max_unavailable_percent = 100
+    max_unavailable_fixed = ceil(var.instance_count, count(data.google_compute_zones.regional_zones.names))
   }
 
   version {
@@ -30,7 +31,7 @@ resource google_compute_instance_group_manager manager {
   update_policy {
     minimal_action = "REPLACE"
     type = "PROACTIVE"
-    max_unavailable_percent = 100
+    max_unavailable_fixed = var.instance_count
   }
 
   version {
