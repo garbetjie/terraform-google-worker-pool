@@ -10,6 +10,7 @@ resource google_compute_region_instance_group_manager manager {
   update_policy {
     minimal_action = "REPLACE"
     type = "PROACTIVE"
+    max_unavailable_fixed = var.instance_count
   }
 
   version {
@@ -29,6 +30,7 @@ resource google_compute_instance_group_manager manager {
   update_policy {
     minimal_action = "REPLACE"
     type = "PROACTIVE"
+    max_unavailable_fixed = var.instance_count
   }
 
   version {
