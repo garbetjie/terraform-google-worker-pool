@@ -1,9 +1,17 @@
-output regional_manager_self_link {
-  value = count(google_compute_region_instance_group_manager.manager) > 0 ? google_compute_region_instance_group_manager.manager[0].self_link : null
+output instance_group_manager_self_link {
+  value = (
+    local.is_regional_manager
+      ? google_compute_region_instance_group_manager.manager[0].self_link
+      : google_compute_instance_group_manager.manager[0].self_link
+  )
 }
 
-output zonal_manager_self_link {
-  value = count(google_compute_instance_group_manager.manager) > 0 ? google_compute_instance_group_manager.manager[0].self_link : null
+output instance_group_self_link {
+  value = (
+    local.is_regional_manager
+      ? google_compute_region_instance_group_manager.manager[0].instance_group
+      : google_compute_instance_group_manager.manager[0].instance_group
+  )
 }
 
 output instance_template_self_link {
