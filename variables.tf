@@ -36,6 +36,23 @@ variable cloudsql_path {
   description = "The path at which CloudSQL connection sockets will be available in workers and timers."
 }
 
+variable cloudsql_restart_interval {
+  type = number
+  default = 5
+  description = "Number of seconds to wait before restarting the CloudSQL service if it stops."
+}
+
+variable cloudsql_restart_policy {
+  type = string
+  default = "always"
+  description = "The restart policy to apply to the CloudSQL service."
+
+  validation {
+    condition = contains(["no", "on-success", "on-failure", "on-abnormal", "on-watchdog", "on-abort", "always"], var.cloudsql_restart_policy)
+    error_message = "CloudSQL restart policy must be one of [always, no, on-success, on-failure, on-abnormal, on-watchdog, on-abort]."
+  }
+}
+
 variable disk_size {
   type = number
   default = 25
@@ -99,6 +116,23 @@ variable preemptible {
   type = bool
   default = false
   description = "Whether or not to create preemptible instances."
+}
+
+variable restart_interval {
+  type = number
+  default = 5
+  description = "Number of seconds to wait before restarting a failed worker."
+}
+
+variable restart_policy {
+  type = string
+  default = "always"
+  description = "The restart policy to apply to workers."
+
+  validation {
+    condition = contains(["no", "on-success", "on-failure", "on-abnormal", "on-watchdog", "on-abort", "always"], var.restart_policy)
+    error_message = "Restart policy must be one of [always, no, on-success, on-failure, on-abnormal, on-watchdog, on-abort]."
+  }
 }
 
 variable service_account_email {

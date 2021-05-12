@@ -34,6 +34,8 @@ resource google_compute_instance_template template {
             image = var.image
             args = local.args
             systemd_name = var.systemd_name
+            restart = var.restart_policy
+            restart_sec = var.restart_interval
           })
         }, {
           path = "/home/chronos/.env"
@@ -56,7 +58,11 @@ resource google_compute_instance_template template {
         local.requires_cloudsql ? [{
           path = "/etc/systemd/system/cloudsql.service"
           permissions = "0644"
-          content = templatefile("${path.module}/templates/cloudsql.tpl", { connections = var.cloudsql_connections })
+          content = templatefile("${path.module}/templates/cloudsql.tpl", {
+            connections = var.cloudsql_connections
+            restart_sec = var.cloudsql_restart_interval
+            restart = var.cloudsql_restart_policy
+          })
         }] : [],
 
         // Create the timers.
