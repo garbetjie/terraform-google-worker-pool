@@ -13,6 +13,7 @@ ExecStartPre=/usr/bin/docker-credential-gcr configure-docker
 ExecStart=/usr/bin/docker run \
   --rm \
   --name=${systemd_name}-%i \
+  --label part-of=worker \
   --env-file /home/chronos/.env \
   ${requires_cloudsql ? "-v cloudsql:${cloudsql_path}:ro" : ""} \
   ${image} ${join(" ", formatlist("$${%s}", keys(args)))}
