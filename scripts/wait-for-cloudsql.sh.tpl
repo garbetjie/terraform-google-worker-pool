@@ -1,13 +1,14 @@
 #!/usr/bin/env sh
 
 started="$(date +%s)"
+wait_duration="${wait_duration}"
 
 while true; do
   now="$(date +%s)"
 
-  # Don't wait longer than 30 seconds for CloudSQL to start.
-  if [ $((now - started)) -gt 30 ]; then
-    echo "CloudSQL taking longer than 30 seconds to start up."
+  # Don't wait longer than ${wait_duration} seconds for CloudSQL to start.
+  if [ "$wait_duration" -gt 0 ] && [ $((now - started)) -gt "$wait_duration" ]; then
+    echo "CloudSQL taking longer than $${wait_duration} seconds to start up."
     exit 1
   fi
 

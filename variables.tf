@@ -53,6 +53,12 @@ variable cloudsql_restart_policy {
   }
 }
 
+variable cloudsql_wait_duration {
+  type = number
+  default = 30
+  description = "How long to wait (in seconds) for CloudSQL connections to be established before starting workers."
+}
+
 variable disk_size {
   type = number
   default = 25

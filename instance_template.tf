@@ -29,7 +29,8 @@ resource google_compute_instance_template template {
           path = "/etc/systemd/system/${var.systemd_name}@.service"
           permissions = "0644"
           content = templatefile("${path.module}/templates/worker.tpl", {
-            requires_cloudsql = local.requires_cloudsql,
+            requires_cloudsql = local.requires_cloudsql
+            wait_for_cloudsql = local.wait_for_cloudsql
             cloudsql_path = var.cloudsql_path
             image = var.image
             args = local.args
@@ -78,6 +79,7 @@ resource google_compute_instance_template template {
           permissions = "0644"
           content = templatefile("${path.module}/templates/timer-service.tpl", {
             requires_cloudsql = local.requires_cloudsql
+            wait_for_cloudsql = local.wait_for_cloudsql
             cloudsql_path = var.cloudsql_path
             image = var.image
             timer = timer
@@ -88,7 +90,9 @@ resource google_compute_instance_template template {
         [{
           path = "/tmp/scripts/wait-for-cloudsql.sh"
           permissions = "0644"
-          content = file("${path.module}/scripts/wait-for-cloudsql.sh")
+          content = templatefile("${path.module}/scripts/wait-for-cloudsql.sh.tpl", {
+            wait_duration = local.cloudsql_wait_duration
+          })
         }]
       ),
 

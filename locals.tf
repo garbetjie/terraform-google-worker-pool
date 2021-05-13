@@ -8,6 +8,12 @@ locals {
   // Extract just the timer names.
   timer_unit_names = formatlist("%s.timer", distinct(local.timers.*.name))
 
+  // Ensure the wait duration is formatted as a number.
+  cloudsql_wait_duration = var.cloudsql_wait_duration == null ? -1 : var.cloudsql_wait_duration
+
+  // Determine whether we should be waiting for CloudSQL or not.
+  wait_for_cloudsql = local.requires_cloudsql && local.cloudsql_wait_duration > -1
+
   // Format args as environment values.
   args = {
     for key, value in var.args:
