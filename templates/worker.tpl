@@ -9,7 +9,8 @@ Environment=HOME=/home/chronos
 %{ endfor ~}
 Restart=${restart}
 RestartSec=${restart_sec}
-ExecStartPre=/usr/bin/docker-credential-gcr configure-docker
+%{ if requires_cloudsql }ExecStartPre=/bin/sh /tmp/scripts/wait-for-cloudsql.sh
+%{ endif ~}
 ExecStart=/usr/bin/docker run \
   --rm \
   --name=${systemd_name}-%i \

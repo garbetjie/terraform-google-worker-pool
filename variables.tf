@@ -135,6 +135,12 @@ variable restart_policy {
   }
 }
 
+variable runcmd {
+  type = list(string)
+  default = []
+  description = "Additional commands to run on instance startup."
+}
+
 variable service_account_email {
   type = string
   default = null

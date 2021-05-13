@@ -82,11 +82,20 @@ resource google_compute_instance_template template {
             image = var.image
             timer = timer
           })
+        }],
+
+        // Ensure script files are available.
+        [{
+          path = "/tmp/scripts/wait-for-cloudsql.sh"
+          permissions = "0644"
+          content = file("${path.module}/scripts/wait-for-cloudsql.sh")
         }]
       ),
 
       runcmd = concat(
         ["systemctl daemon-reload", "systemctl restart docker"],
+        ["HOME=/home/chronos docker-credential-gcr configure-docker", "chown -R chronos:chronos /home/chronos/.docker"],
+        var.runcmd,
         var.workers_per_instance > 0 ? ["systemctl start $(printf '${var.systemd_name}@%02d ' $(seq 1 ${var.workers_per_instance}))"] : [],
         length(local.timer_unit_names) > 0 ? ["systemctl start ${join(" ", local.timer_unit_names)}"]: []
       )
