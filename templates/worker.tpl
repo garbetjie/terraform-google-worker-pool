@@ -5,7 +5,7 @@ After=docker.service ${requires_cloudsql ? "cloudsql.service": ""}
 [Service]
 Type=exec
 Environment=HOME=/home/chronos
-%{ for key, value in command }Environment=${format('ARG%d', key)}=${value}
+%{ for key, value in command }Environment=${format("ARG%d", key)}=${value}
 %{ endfor ~}
 Restart=${restart}
 RestartSec=${restart_sec}
