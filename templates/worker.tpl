@@ -5,7 +5,7 @@ After=docker.service ${requires_cloudsql ? "cloudsql.service": ""}
 [Service]
 Type=exec
 Environment=HOME=/home/chronos
-%{ for key, value in command }Environment=${format("ARG%d", key)}=${value}
+%{ for index in range(length(command)) }Environment=${format("ARG%d", index)}=${command[index]}
 %{ endfor ~}
 Restart=${restart}
 RestartSec=${restart_sec}
@@ -17,5 +17,5 @@ ExecStart=/usr/bin/docker run \
   --label part-of=worker \
   --env-file /home/chronos/.env \
   ${requires_cloudsql ? "-v cloudsql:${cloudsql_path}:ro" : ""} \
-  ${image} ${join(" ", formatlist("$${ARG%d}", keys(command)))}
+  ${image} ${join(" ", formatlist("$${ARG%d}", range(length(command))))}
 ExecStop=-/usr/bin/docker stop ${systemd_name}-%i
