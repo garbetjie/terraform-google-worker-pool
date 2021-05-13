@@ -33,7 +33,7 @@ resource google_compute_instance_template template {
             wait_for_cloudsql = local.wait_for_cloudsql
             cloudsql_path = var.cloudsql_path
             image = var.image
-            args = local.args
+            command = var.command
             systemd_name = var.systemd_name
             restart = var.restart_policy
             restart_sec = var.restart_interval

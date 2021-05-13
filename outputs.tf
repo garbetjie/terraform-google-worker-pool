@@ -38,8 +38,8 @@ output workers_per_instance {
   value = var.workers_per_instance
 }
 
-output args {
-  value = var.args
+output command {
+  value = var.command
 }
 
 output cloudsql_connections {

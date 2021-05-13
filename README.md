@@ -49,7 +49,7 @@ module worker {
   workers_per_instance = 1
   location = "europe-west4"
   image = "garbetjie/php:7.4-cli"
-  args = ["php", "-S", "localhost:8000"]
+  command = ["php", "-S", "localhost:8000"]
 }
 ```
 
@@ -83,7 +83,7 @@ on the allowed formats of this property.
 
 ## Argument escaping
 
-Arguments passed in `var.args` and `var.timers.*.args` are escaped, and can safely contain spaces, strings and any number
+Arguments passed in `var.command` and `var.timers.*.command` are escaped, and can safely contain spaces, strings and any number
 of values. How this is achieved is outlined below:
 
 Terraform provides no way to escape strings for use in shell scripts, and using regular expressions to accomplish this

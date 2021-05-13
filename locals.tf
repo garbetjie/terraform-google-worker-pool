@@ -14,21 +14,12 @@ locals {
   // Determine whether we should be waiting for CloudSQL or not.
   wait_for_cloudsql = local.requires_cloudsql && local.cloudsql_wait_duration > -1
 
-  // Format args as environment values.
-  args = {
-    for key, value in var.args:
-      "ARG${key}" => value
-  }
-
   // Format complete timer objects.
   timers = [
     for timer in var.timers: {
       name = timer.name
       schedule = timer.schedule
-      args = {
-        for key, value in lookup(timer, "args", []):
-          "ARG${key}" => value
-      }
+      command = lookup(timer, "command", [])
     }
   ]
 

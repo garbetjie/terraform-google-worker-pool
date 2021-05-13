@@ -18,10 +18,10 @@ variable workers_per_instance {
   description = "Number of workers to start up per instance."
 }
 
-variable args {
+variable command {
   type = list(string)
   default = []
-  description = "Arguments to pass to workers. See README for line break support."
+  description = "Command to run in workers. See README for line break support."
 }
 
 variable cloudsql_connections {
@@ -164,7 +164,7 @@ variable timers {
   object({
     name = string,
     schedule = string,
-    args = optional(list(string))
+    command = optional(list(string))
   })
   )
   default = []
