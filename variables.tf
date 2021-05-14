@@ -82,6 +82,42 @@ variable env {
   description = "Environment variables to inject into workers and timers."
 }
 
+variable health_check_enabled {
+  type = bool
+  default = false
+  description = "Create a health check to force unhealthy instances to be recreated."
+}
+
+variable health_check_port {
+  type = number
+  default = 4144
+  description = "The host port that is exposed for the health check."
+}
+
+variable health_check_name {
+  type = string
+  default = null
+  description = "The name of the created health check."
+}
+
+variable health_check_interval {
+  type = number
+  default = 10
+  description = "Interval between health checks."
+}
+
+variable health_check_healthy_threshold {
+  type = number
+  default = 3
+  description = "Number of consecutive health checks that must succeed for an instance to be marked as healthy."
+}
+
+variable health_check_unhealthy_threshold {
+  type = number
+  default = 3
+  description = "Number of consecutive health checks that must fail for an instance to be marked as unhealthy."
+}
+
 variable instance_count {
   type = number
   default = 1

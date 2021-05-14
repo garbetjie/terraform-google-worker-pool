@@ -28,7 +28,7 @@ resource google_compute_instance_template template {
         [{
           path = "/etc/systemd/system/${var.systemd_name}@.service"
           permissions = "0644"
-          content = templatefile("${path.module}/templates/worker.tpl", {
+          content = templatefile("${path.module}/units/worker.tpl", {
             requires_cloudsql = local.requires_cloudsql
             wait_for_cloudsql = local.wait_for_cloudsql
             cloudsql_path = var.cloudsql_path
@@ -59,7 +59,7 @@ resource google_compute_instance_template template {
         local.requires_cloudsql ? [{
           path = "/etc/systemd/system/cloudsql.service"
           permissions = "0644"
-          content = templatefile("${path.module}/templates/cloudsql.tpl", {
+          content = templatefile("${path.module}/units/cloudsql.tpl", {
             connections = var.cloudsql_connections
             restart_sec = var.cloudsql_restart_interval
             restart = var.cloudsql_restart_policy
@@ -70,14 +70,14 @@ resource google_compute_instance_template template {
         [for timer in var.timers: {
           path = "/etc/systemd/system/${timer.name}.timer"
           permissions = "0644"
-          content = templatefile("${path.module}/templates/timer.tpl", { timer = timer })
+          content = templatefile("${path.module}/units/timer.tpl", { timer = timer })
         }],
 
         // Create the services for the timers.
         [for timer in local.timers: {
           path = "/etc/systemd/system/${timer.name}.service",
           permissions = "0644"
-          content = templatefile("${path.module}/templates/timer-service.tpl", {
+          content = templatefile("${path.module}/units/timer-service.tpl", {
             requires_cloudsql = local.requires_cloudsql
             wait_for_cloudsql = local.wait_for_cloudsql
             cloudsql_path = var.cloudsql_path
@@ -92,6 +92,13 @@ resource google_compute_instance_template template {
           permissions = "0644"
           content = templatefile("${path.module}/scripts/wait-for-cloudsql.sh.tpl", {
             wait_duration = local.cloudsql_wait_duration
+          })
+        }, {
+          path = "/tmp/scripts/healthcheck.sh"
+          permissions = "0644"
+          content = templatefile("${path.module}/scripts/healthcheck.sh.tpl", {
+            expected_count = sum([var.workers_per_instance, local.requires_cloudsql ? 1 : 0])
+            health_check_port = var.health_check_port
           })
         }]
       ),
