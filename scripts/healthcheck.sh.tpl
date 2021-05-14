@@ -15,7 +15,7 @@ while true; do
   if [ "$running_total_count" = "${expected_count}" ]; then
     if [ "$is_health_check_running" = false ]; then
       echo "open port"
-      docker run --name "$container_name" -d --rm -p "${health_check_port}:1025" alpine nc -d -k -l 1025
+      docker run --name "$container_name" -d --rm -p "${health_check_port}:1025" alpine nc -lk 0.0.0.0 1025
     fi
   # Otherwise, the expected number of containers aren't running. Stop the health check container if it's still running.
   else
