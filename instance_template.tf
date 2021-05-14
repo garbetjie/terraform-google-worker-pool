@@ -114,7 +114,8 @@ resource google_compute_instance_template template {
         ["HOME=/home/chronos docker-credential-gcr configure-docker", "chown -R chronos:chronos /home/chronos/.docker"],
         var.runcmd,
         var.workers_per_instance > 0 ? ["systemctl start $(printf '${var.systemd_name}@%02d ' $(seq 1 ${var.workers_per_instance}))"] : [],
-        length(local.timer_unit_names) > 0 ? ["systemctl start ${join(" ", local.timer_unit_names)}"]: []
+        length(local.timers) > 0 ? ["systemctl start ${join(" ", formatlist("%s.timer", distinct(local.timers.*.name)))}"]: [],
+        var.health_check_enabled ? ["systemctl start healthcheck"] : [],
       )
     })])
   }

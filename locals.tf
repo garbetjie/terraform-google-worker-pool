@@ -5,9 +5,6 @@ locals {
   // Are we making use of CloudSQL?
   requires_cloudsql = length(var.cloudsql_connections) > 0
 
-  // Extract just the timer names.
-  timer_unit_names = formatlist("%s.timer", distinct(local.timers.*.name))
-
   // Ensure the wait duration is formatted as a number.
   cloudsql_wait_duration = var.cloudsql_wait_duration == null ? -1 : var.cloudsql_wait_duration
 
