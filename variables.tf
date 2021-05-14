@@ -112,6 +112,12 @@ variable health_check_healthy_threshold {
   description = "Number of consecutive health checks that must succeed for an instance to be marked as healthy."
 }
 
+variable health_check_initial_delay {
+  type = number
+  default = 60
+  description = "Number of seconds to allow instances to boot before starting health checks."
+}
+
 variable health_check_unhealthy_threshold {
   type = number
   default = 3
