@@ -97,7 +97,7 @@ resource google_compute_instance_template template {
             expected_count = sum([var.workers_per_instance, local.requires_cloudsql ? 1 : 0])
             health_check_port = var.health_check_port
           })
-        }] : []
+        }] : [],
 
         // Ensure script files are available.
         [{
