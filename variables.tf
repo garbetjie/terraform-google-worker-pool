@@ -212,3 +212,8 @@ variable timers {
   default = []
   description = "Scheduled timers to execute on instances."
 }
+
+variable wait_for_instances {
+  type = bool
+  default = false
+}
