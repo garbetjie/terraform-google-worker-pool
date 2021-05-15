@@ -89,13 +89,15 @@ resource google_compute_instance_template template {
         var.health_check_enabled ? [{
           path = "/etc/systemd/system/healthcheck.service"
           permissions = "0644"
-          content = file("${path.module}/units/healthcheck.tpl")
+          content = templatefile("${path.module}/units/healthcheck.service.tpl", {
+            container_name = "healthcheck-${random_id.health_check_container_suffix.hex}",
+            health_check_port = var.health_check_port
+          })
         }, {
           path = "/tmp/scripts/healthcheck.sh"
           permissions = "0644"
           content = templatefile("${path.module}/scripts/healthcheck.sh.tpl", {
             expected_count = sum([var.workers_per_instance, local.requires_cloudsql ? 1 : 0])
-            health_check_port = var.health_check_port
           })
         }] : [],
 
