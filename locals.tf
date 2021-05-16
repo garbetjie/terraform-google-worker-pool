@@ -11,6 +11,9 @@ locals {
   // Determine whether we should be waiting for CloudSQL or not.
   wait_for_cloudsql = local.requires_cloudsql && local.cloudsql_wait_duration > -1
 
+  // The unique label used to target instances in firewall rules.
+  target_label = "${var.name}-${random_id.instance_label_suffix.hex}"
+
   // Format complete timer objects.
   timers = [
     for timer in var.timers: {

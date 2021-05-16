@@ -60,3 +60,7 @@ resource google_compute_instance_group_manager manager {
 resource random_id health_check_container_suffix {
   byte_length = 4
 }
+
+resource random_id instance_label_suffix {
+  byte_length = 4
+}
