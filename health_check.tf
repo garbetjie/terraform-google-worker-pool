@@ -1,5 +1,4 @@
 resource google_compute_health_check instance_health {
-  provider = google-beta
   count = var.health_check_enabled ? 1 : 0
   name = var.health_check_name == null ? "${var.name}-healthy" : var.health_check_name
   check_interval_sec = var.health_check_interval
@@ -9,10 +8,6 @@ resource google_compute_health_check instance_health {
 
   tcp_health_check {
     port = var.health_check_port
-  }
-
-  log_config {
-    enable = true
   }
 }
 
