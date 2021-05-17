@@ -85,7 +85,7 @@ variable env {
 variable health_check_enabled {
   type = bool
   default = false
-  description = "Create a health check to force unhealthy instances to be recreated."
+  description = "Flag indicating whether to create a health check to force unhealthy instances to be recreated."
 }
 
 variable health_check_port {
@@ -175,7 +175,7 @@ variable restart_interval {
 variable restart_policy {
   type = string
   default = "always"
-  description = "The restart policy to apply to workers."
+  description = "Restart policy to apply to failed workers."
 
   validation {
     condition = contains(["no", "on-success", "on-failure", "on-abnormal", "on-watchdog", "on-abort", "always"], var.restart_policy)
@@ -186,7 +186,7 @@ variable restart_policy {
 variable runcmd {
   type = list(string)
   default = []
-  description = "Additional commands to run on instance startup."
+  description = "Additional commands to run on instance startup. These commands are run after Docker is configured & restarted, and immediately before any workers & CloudSQL connections are started."
 }
 
 variable service_account_email {
@@ -198,7 +198,7 @@ variable service_account_email {
 variable systemd_name {
   type = string
   default = "worker"
-  description = "Name of the systemd service for workers."
+  description = "Name of the systemd service for workers. This is configurable to ensure it doesn't clash with names of timers."
 }
 
 variable timers {
@@ -213,7 +213,14 @@ variable timers {
   description = "Scheduled timers to execute on instances."
 }
 
+variable timezone {
+  type = string
+  default = "Etc/UTC"
+  description = "Timezone to use on instances. See the \"TZ database name\" column on https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for an indication as to available timezone names."
+}
+
 variable wait_for_instances {
   type = bool
   default = false
+  description = "Wait for instances to stabilise starting after updating the pool's instance group."
 }

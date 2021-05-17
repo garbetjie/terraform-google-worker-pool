@@ -113,6 +113,7 @@ resource google_compute_instance_template template {
       ),
 
       runcmd = concat(
+        ["rm -f /etc/localtime", "ln -s /usr/share/zoneinfo/${var.timezone} /etc/localtime"],
         ["systemctl daemon-reload", "systemctl restart docker"],
         ["HOME=/home/chronos docker-credential-gcr configure-docker", "chown -R chronos:chronos /home/chronos/.docker"],
         var.runcmd,
