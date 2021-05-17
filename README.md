@@ -14,6 +14,7 @@ background workers running in a Docker container.
   * [Timers](#timers)
   * [Argument escaping](#argument-escaping)
   * [Default log driver options](#default-log-driver-options)
+  * [Health checks](#health-checks)
 * [Inputs](#inputs)
 * [Outputs](#outputs)
 * [Roadmap](#roadmap)
@@ -120,6 +121,16 @@ json-file = {
   compress = "true"
 }
 ```
+
+## Health checks
+
+Instances in the worker pool can be checked regularly to ensure they're still healthy and eligible to be in the pool.
+
+Worker pool health checks ensure that all the requested workers are running (and the CloudSQL container if
+`var.cloudsql_connections` is not empty).
+If all workers are running, a port is opened on the instance for access by Google Cloud's health checks. If any workers
+are not running, this port will be closed - causing the health checks to start  failing, and the unhealthy instance to
+be recreated in the worker pool.
 
 # Inputs
 
