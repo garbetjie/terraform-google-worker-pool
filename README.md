@@ -46,11 +46,45 @@ The usage shown below is with the least amount of configuration possible. All th
 module worker {
   source = "garbetjie/worker-pool/google"
   
+  // Required arguments.
   name = "my-pool"
-  workers_per_instance = 1
-  location = "europe-west4"
   image = "garbetjie/php:7.4-cli"
+  location = "europe-west4"
+  workers_per_instance = 1
+  
+  // Optional arguments.
   command = ["php", "-S", "localhost:8000"]
+  cloudsql_connections = [google_sql_database_instance.db.connection_name]
+  cloudsql_path = "/cloudsql"
+  cloudsql_restart_interval = 5
+  cloudsql_restart_policy = "always"
+  cloudsql_wait_duration = 30
+  disk_size = 25
+  disk_type = "pd-balanced"
+  env = {}
+  health_check_enabled = false
+  health_check_port = 4144
+  health_check_name = null
+  health_check_interval = 10
+  health_check_healthy_threshold = 3
+  health_check_initial_delay = 60
+  health_check_unhealthy_threshold = 3
+  instance_count = 1
+  labels = {}
+  log_driver = "local"
+  log_opts = null
+  machine_type = "f1-micro"
+  network = "default"
+  preemptible = false
+  restart_interval = 5
+  restart_policy = "always"
+  runcmd = []
+  service_account_email = null
+  systemd_name = "worker"
+  tags = []
+  timers = []
+  timezone = "Etc/UTC"
+  wait_for_instances = false
 }
 ```
 
@@ -169,6 +203,7 @@ be recreated in the worker pool.
 | service_account_email            | Service account to assign to the pool.                                                                                                                                                | string                                                                            | `null`          | No       |
 | systemd_name                     | Name of the systemd service for workers. This is configurable to ensure it doesn't clash with names of timers.                                                                        | string                                                                            | `"worker"`      | No       |
 | timers                           | Scheduled [timers](https://www.freedesktop.org/software/systemd/man/systemd.timer.html) to create.                                                                                    | list(object({ name = string, schedule = string, args = optional(list(string)) })) | `[]`            | No       |
+| tags                             | Network tags to apply to instances in the pool.                                                                                                                                       | list(string)                                                                      | `[]`            | No       |
 | timers.*.name                    | Name of the timer to create. This is used to name the container, service unit and timer unit for this timer.                                                                          | string                                                                            |                 | Yes      |
 | timers.*.schedule                | The schedule on which this timer should run. The [`OnCalendar`](https://www.freedesktop.org/software/systemd/man/systemd.timer.html#OnCalendar=) format is used.                      | string                                                                            |                 | Yes      |
 | timers.*.command                 | Arguments to pass to the timer. See the notes about [argument escaping](#argument-escaping) for information on formatting.                                                            | list(string)                                                                      | `[]`            | No       |

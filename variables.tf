@@ -201,6 +201,12 @@ variable systemd_name {
   description = "Name of the systemd service for workers. This is configurable to ensure it doesn't clash with names of timers."
 }
 
+variable tags {
+  type = list(string)
+  default = []
+  description = "Network tags to apply to instances in the pool."
+}
+
 variable timers {
   type = list(
   object({

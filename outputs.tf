@@ -150,6 +150,10 @@ output systemd_name {
   value = var.systemd_name
 }
 
+output tags {
+  value = var.tags
+}
+
 output timers {
   value = var.timers
 }
