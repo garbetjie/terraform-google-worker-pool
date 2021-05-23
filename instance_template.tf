@@ -54,6 +54,13 @@ resource google_compute_instance_template template {
             log-driver = var.log_driver,
             log-opts = local.log_opts
           })
+        }, {
+          path = "/etc/runtime/args/worker"
+          permissions = "0644"
+          content = join("\n", concat([
+            for index in range(length(var.command)):
+              "${format("ARG%d", index)}=${var.command[index]}"
+          ], [""]))
         }],
 
         // Create the CloudSQL service.
@@ -68,11 +75,18 @@ resource google_compute_instance_template template {
         }] : [],
 
         // Create the timers.
-        [for timer in var.timers: {
+        flatten([for timer in var.timers: [{
           path = "/etc/systemd/system/${timer.name}.timer"
           permissions = "0644"
           content = templatefile("${path.module}/units/timer.tpl", { timer = timer })
-        }],
+        }, {
+          path = "/etc/runtime/args/timer-${timer.name}"
+          permissions = "0644"
+          content = join("\n", concat([
+            for index in range(length(timer.command)):
+              "${format("ARG%d", index)}=${timer.command[index]}"
+          ], []))
+        }]]),
 
         // Create the services for the timers.
         [for timer in local.timers: {
