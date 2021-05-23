@@ -40,7 +40,7 @@ resource google_compute_instance_template template {
             restart_sec = var.restart_interval
           })
         }, {
-          path = "/home/chronos/.env"
+          path = "/etc/runtime/env"
           permissions = "0644"
           owner = "chronos:chronos"
           content = join("\n", concat(

@@ -14,7 +14,7 @@ ExecStart=/usr/bin/docker run \
   --rm \
   --name=${systemd_name}-%i \
   --label part-of=worker \
-  --env-file /home/chronos/.env \
+  --env-file /etc/runtime/env \
 %{ if requires_cloudsql }  -v cloudsql:${cloudsql_path}:ro \
 %{ endif ~}
   ${image} ${join(" ", formatlist("$${ARG%d}", range(length(command))))}
