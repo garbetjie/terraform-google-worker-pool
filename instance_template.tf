@@ -38,6 +38,7 @@ resource google_compute_instance_template template {
             systemd_name = var.systemd_name
             restart = var.restart_policy
             restart_sec = var.restart_interval
+            expose_ports = var.expose_ports
           })
         }, {
           path = "/etc/runtime/env"

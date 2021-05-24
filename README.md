@@ -183,6 +183,7 @@ be recreated in the worker pool.
 | disk_size                        | Disk size (in GB) to create instances with.                                                                                                                                           | number                                                                            | `25`            | No       |
 | disk_type                        | Disk type to create instances with. Must be one of \[`"pd-ssd"`, `"local-ssd"`, `"pd-balanced"`, `"pd-standard"`\].                                                                   | string                                                                            | `"pd-balanced"` | No       |
 | env                              | Environment variables to inject into workers and timers.                                                                                                                              | map(string)                                                                       | `{}`            | No       |
+| expose_ports                     | Container ports to expose on the host. Passed directly to the -p flag. Should not be used if `var.workers_per_instance` > 1.                                                          | list(string)                                                                      | `[]`            | No       |
 | health_check_enabled             | Flag indicating whether to create a health check to force unhealthy instances to be recreated.                                                                                        | bool                                                                              | `false`         | No       |
 | health_check_port                | The host port that is exposed for the health check.                                                                                                                                   | number                                                                            | `4144`          | No       |
 | health_check_name                | The name of the created health check. Defaults to `"${var.name}-healthy"`.                                                                                                            | string                                                                            | `null`          | No       |
@@ -221,6 +222,41 @@ All inputs are exported as outputs. There are additional outputs as defined belo
 | instance_template_self_link      | Self link to the created instance template.                       | string |
 | regional                         | Flag indicating if a regional instance group manager was created. | bool   |
 
+# Changelog
+
+* **1.1.0**
+  * Add changelog to documentation.
+  * Add ability to expose ports.
+
+* **1.0.1**
+  * Ensure service arguments with spaces work correctly.
+
+* **1.0.0**
+  * Documentation update.
+  * Add inputs as outputs.
+  * Add ability to configure timezone & network tags on instances.
+
+* **0.8.1**
+  * Remove `google-beta` provider-specific functionality.
+
+* **0.8.0**
+  * Add health checks.
+  * Make `wait_for_instances` configurable.
+  
+* **0.7.1**
+  * Fix incorrect functions used for generating command argument lists.
+
+* **.0.7.0**
+  * Change `var.args` and `var.timers.*.args` to `var.command` and `var.timers.*.command`.
+  * Fix naming of argument environment variables.
+  
+* **0.6.0**
+  * Make CloudSQL wait duration configurable.
+  
+* **0.5.0**
+  * Add `var.runcmd` to run arbitrary commands on startup.
+  * Add waiting for CloudSQL to start up.
+
 # Roadmap
 
 The points listed below are features that have been considered for possible inclusion in the future. There are no
@@ -237,8 +273,3 @@ guarantees as to whether these features will ever make it into the final module:
   Ideally, it would be great to be able to customise the instance group to scale automatically - either by custom
   Stackdriver metric, or by CPU usage. First prize would be to enable autoscaling by custom metric.
   
-* **Exposing ports**
-
-  Ideally, it should be possible to expose ports from the worker containers. This can make it possible for workers to be
-  communicated with in some form.
-

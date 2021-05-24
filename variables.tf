@@ -82,6 +82,12 @@ variable env {
   description = "Environment variables to inject into workers and timers."
 }
 
+variable expose_ports {
+  type = list(string)
+  default = []
+  description = "Container ports to expose on the host. Passed directly to the -p flag."
+}
+
 variable health_check_enabled {
   type = bool
   default = false
