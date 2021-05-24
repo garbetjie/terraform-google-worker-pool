@@ -275,3 +275,14 @@ guarantees as to whether these features will ever make it into the final module:
   Ideally, it would be great to be able to customise the instance group to scale automatically - either by custom
   Stackdriver metric, or by CPU usage. First prize would be to enable autoscaling by custom metric.
   
+* **Waiting for CloudSQL: TCP ports**
+  
+  Currently, when waiting for CloudSQL to start, only socket connections are checked. If CloudSQL is actually listening
+  on a TCP connection, the script will never know.
+
+* **Customising the health check port when ports are exposed.**
+
+  When ports are exposed, they're never taken into account when it comes to health checks. Perhaps the default health
+  check port exposing should be used if no ports are exposed.
+  
+  If there are any ports exposed, then rather default to checking those ports?
