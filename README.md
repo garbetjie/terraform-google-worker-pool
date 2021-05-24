@@ -221,12 +221,14 @@ All inputs are exported as outputs. There are additional outputs as defined belo
 | instance_group_self_link         | Self link of the instance group.                                  | string |
 | instance_template_self_link      | Self link to the created instance template.                       | string |
 | regional                         | Flag indicating if a regional instance group manager was created. | bool   |
+| tag                              | Unique tag generated for instance targeting in firewall rules.    | string |
 
 # Changelog
 
 * **1.1.0**
   * Add changelog to documentation.
   * Add ability to expose ports.
+  * Add `tag` output.
 
 * **1.0.1**
   * Ensure service arguments with spaces work correctly.

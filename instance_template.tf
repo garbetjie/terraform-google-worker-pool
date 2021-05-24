@@ -2,7 +2,7 @@ resource google_compute_instance_template template {
   name_prefix = "${var.name}-"
   machine_type = var.machine_type
   labels = var.labels
-  tags = distinct(concat(var.tags, [local.target_label]))
+  tags = distinct(concat(var.tags, [local.tag]))
 
   dynamic service_account {
     for_each = var.service_account_email != null ? [var.service_account_email] : []

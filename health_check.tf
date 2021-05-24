@@ -16,7 +16,7 @@ resource google_compute_firewall instance_health_checks {
   name = google_compute_health_check.instance_health[0].name
   network = var.network
   source_ranges = ["35.191.0.0/16", "130.211.0.0/22"]
-  target_tags = [local.target_label]
+  target_tags = [local.tag]
 
   allow {
     protocol = "TCP"

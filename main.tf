@@ -61,6 +61,6 @@ resource random_id health_check_container_suffix {
   byte_length = 4
 }
 
-resource random_id instance_label_suffix {
+resource random_id instance_tag_suffix {
   byte_length = 4
 }

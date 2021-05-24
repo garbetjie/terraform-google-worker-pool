@@ -22,6 +22,10 @@ output regional {
   value = local.is_regional_manager
 }
 
+output tag {
+  value = local.tag
+}
+
 output name {
   value = var.name
 }
