@@ -79,7 +79,7 @@ output env {
 }
 
 output expose_ports {
-  value = var.expose_ports
+  value = local.expose_ports
 }
 
 output health_check_enabled {
