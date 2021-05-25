@@ -197,6 +197,7 @@ be recreated in the worker pool.
 | log_driver                       | Default [log driver](https://docs.docker.com/config/containers/logging/configure) to be used in the Docker daemon.                                                                    | string                                                                                                                  | `"local"`       | No       |
 | log_opts                         | Options for configured log driver. Sensible defaults are used and [are documented](#default-log-driver-options) above.                                                                | map(string)                                                                                                             | `null`          | No       |
 | machine_type                     | Machine type to create instances in the pool with.                                                                                                                                    | string                                                                                                                  | `"f1-micro"`    | No       |
+| metadata                         | Additional metadata to add to instances. The following keys are used by this module and will be overwritten: [`user-data`].                                                           | map(string)                                                                                                             | `{}`            | No       |
 | network                          | Network name or link in which to create the pool.                                                                                                                                     | string                                                                                                                  | `"default"`     | No       |
 | preemptible                      | Whether or not to create [preemptible](https://cloud.google.com/compute/docs/instances/preemptible) instances.                                                                        | bool                                                                                                                    | `false`         | No       |
 | restart_interval                 | Number of seconds to wait before restarting a failed worker.                                                                                                                          | number                                                                                                                  | `5`             | No       |
@@ -225,6 +226,9 @@ All inputs are exported as outputs. There are additional outputs as defined belo
 | tag                              | Unique tag generated for instance targeting in firewall rules.    | string |
 
 # Changelog
+
+* **1.3.0**
+  * Add ability to customise metadata.
 
 * **1.2.0**
   * Define a proper structure for `var.expose_ports`.

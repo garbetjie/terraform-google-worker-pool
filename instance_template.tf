@@ -23,7 +23,7 @@ resource google_compute_instance_template template {
     network = var.network
   }
 
-  metadata = {
+  metadata = merge(var.metadata, {
     user-data = join("\n", ["#cloud-config", yamlencode({
       write_files = concat(
         [{
@@ -137,7 +137,7 @@ resource google_compute_instance_template template {
         var.health_check_enabled ? ["systemctl start healthcheck"] : [],
       )
     })])
-  }
+  })
 
   scheduling {
     preemptible = var.preemptible

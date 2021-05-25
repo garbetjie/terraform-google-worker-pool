@@ -174,6 +174,12 @@ variable machine_type {
   description = "Machine type to create instances in the pool with."
 }
 
+variable metadata {
+  type = map(string)
+  default = {}
+  description = "Additional metadata to add to instances. Keys used by this module will be overwritten."
+}
+
 variable network {
   type = string
   default = "default"

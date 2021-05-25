@@ -38,6 +38,10 @@ output location {
   value = var.location
 }
 
+output metadata {
+  value = google_compute_instance_template.template.metadata
+}
+
 output workers_per_instance {
   value = var.workers_per_instance
 }
