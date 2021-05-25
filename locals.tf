@@ -39,4 +39,14 @@ locals {
       compress = "true"
     }
   }
+
+  // Format the exposed ports.
+  expose_ports = [
+    for expose in var.expose_ports: {
+      port = expose.port
+      container_port = lookup(expose, "port", null) == null ? expose.port : expose.container_port
+      protocol = lookup(expose, "protocol", null) == null ? "tcp" : expose.protocol
+      host = lookup(expose, "host", null) == null ? "0.0.0.0" : expose.host
+    }
+  ]
 }

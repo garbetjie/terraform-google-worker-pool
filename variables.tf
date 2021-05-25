@@ -83,9 +83,23 @@ variable env {
 }
 
 variable expose_ports {
-  type = list(string)
+  type = list(object({
+    port = number
+    protocol = optional(string)
+    container_port = optional(number)
+    host = optional(string)
+  }))
   default = []
-  description = "Container ports to expose on the host. Passed directly to the -p flag."
+  description = "Container ports to be exposed on the host."
+
+  validation {
+    error_message = "Protocol must be one of [udp, tcp]."
+    condition = alltrue([
+      for p in var.expose_ports:
+        contains(["tcp", "udp"], lower(p.protocol))
+      if p.protocol != null
+    ])
+  }
 }
 
 variable health_check_enabled {

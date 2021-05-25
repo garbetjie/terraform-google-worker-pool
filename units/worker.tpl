@@ -15,7 +15,7 @@ ExecStart=/usr/bin/docker run \
   --name=${systemd_name}-%i \
   --label part-of=worker \
   --env-file /etc/runtime/env \
-%{ if length(expose_ports) > 0 }  -p ${join(" -p ", expose_ports)} \
+%{ if length(expose_ports) > 0 }  -p ${join(" -p ", formatlist("%s:%d:%d/%s", expose_ports.*.host, expose_ports.*.port, expose_ports.*.container_port, expose_ports.*.protocol))} \
 %{ endif ~}
 %{ if requires_cloudsql }  -v cloudsql:${cloudsql_path}:ro \
 %{ endif ~}
