@@ -75,6 +75,10 @@ module worker {
   log_driver = "local"
   log_opts = null
   machine_type = "f1-micro"
+  mounts = [
+    { type = "volume", src = "volume_name", target = "/mnt", readonly = false },
+    { type = "bind", src = "/etc", target = "/mnt/etc", readonly = true }
+  ]
   network = "default"
   preemptible = false
   restart_interval = 5
@@ -198,6 +202,11 @@ be recreated in the worker pool.
 | log_opts                         | Options for configured log driver. Sensible defaults are used and [are documented](#default-log-driver-options) above.                                                                | map(string)                                                                                                             | `null`          | No       |
 | machine_type                     | Machine type to create instances in the pool with.                                                                                                                                    | string                                                                                                                  | `"f1-micro"`    | No       |
 | metadata                         | Additional metadata to add to instances. The following keys are used by this module and will be overwritten: [`user-data`].                                                           | map(string)                                                                                                             | `{}`            | No       |
+| mounts                           | Volumes or mounts to mount into the worker containers.                                                                                                                                | list(object({ type = optional(string), src = string, target = string, readonly = optional(bool) }))                     | `[]`            | No       |
+| mounts.*.type                    | The type of mount to create. Supported values: [`"volume"`, `"bind"`, `"tmpfs"`]. See https://docs.docker.com/storage/ for more information.                                          | string                                                                                                                  | `"volume"`      | No       |
+| mounts.*.src                     | The source volume name or path on the host to mount into the container.                                                                                                               | string                                                                                                                  |                 | Yes      |
+| mounts.*.target                  | The target directory or file in the container.                                                                                                                                        | string                                                                                                                  |                 | Yes      |
+| mounts.*.readonly                | Make the mounted directory or file readonly, to prevent modifications.                                                                                                                | bool                                                                                                                    | `false`         | No       |
 | network                          | Network name or link in which to create the pool.                                                                                                                                     | string                                                                                                                  | `"default"`     | No       |
 | preemptible                      | Whether or not to create [preemptible](https://cloud.google.com/compute/docs/instances/preemptible) instances.                                                                        | bool                                                                                                                    | `false`         | No       |
 | restart_interval                 | Number of seconds to wait before restarting a failed worker.                                                                                                                          | number                                                                                                                  | `5`             | No       |
@@ -227,6 +236,9 @@ All inputs are exported as outputs. There are additional outputs as defined belo
 
 # Changelog
 
+* **1.4.0**
+  * Add mounting of volumes into workers.
+  
 * **1.3.0**
   * Add ability to customise metadata.
 
