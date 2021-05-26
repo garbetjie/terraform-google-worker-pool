@@ -180,6 +180,17 @@ variable metadata {
   description = "Additional metadata to add to instances. Keys used by this module will be overwritten."
 }
 
+variable mounts {
+  type = list(object({
+    type = optional(string)
+    src = string
+    target = string
+    readonly = optional(bool)
+  }))
+  default = []
+  description = "Volumes to mount into the worker containers."
+}
+
 variable network {
   type = string
   default = "default"

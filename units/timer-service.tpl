@@ -4,7 +4,7 @@ After=docker.service ${requires_cloudsql ? "cloudsql.service": ""}
 
 [Service]
 Type=oneshot
-Environment=HOME=/home/chronos
+Environment=HOME=/etc/runtime
 EnvironmentFile=/etc/runtime/args/timer-${timer.name}
 %{ if wait_for_cloudsql }ExecStartPre=/bin/sh /tmp/scripts/wait-for-cloudsql.sh
 %{ endif ~}

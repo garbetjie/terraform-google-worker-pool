@@ -39,6 +39,7 @@ resource google_compute_instance_template template {
             restart = var.restart_policy
             restart_sec = var.restart_interval
             expose_ports = local.expose_ports
+            mounts = local.mounts
           })
         }, {
           path = "/etc/runtime/env"
@@ -130,7 +131,7 @@ resource google_compute_instance_template template {
       runcmd = concat(
         ["rm -f /etc/localtime", "ln -s /usr/share/zoneinfo/${var.timezone} /etc/localtime"],
         ["systemctl daemon-reload", "systemctl restart docker"],
-        ["HOME=/home/chronos docker-credential-gcr configure-docker", "chown -R chronos:chronos /home/chronos/.docker"],
+        ["HOME=/etc/runtime docker-credential-gcr configure-docker"],
         var.runcmd,
         var.workers_per_instance > 0 ? ["systemctl start $(printf '${var.systemd_name}@%02d ' $(seq 1 ${var.workers_per_instance}))"] : [],
         length(local.timers) > 0 ? ["systemctl start ${join(" ", formatlist("%s.timer", distinct(local.timers.*.name)))}"]: [],

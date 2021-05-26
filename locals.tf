@@ -49,4 +49,14 @@ locals {
       host = lookup(expose, "host", null) == null ? "0.0.0.0" : expose.host
     }
   ]
+
+  // Format the mounts.
+  mounts = [
+    for mount in var.mounts: {
+      type = lookup(mount, "type", null) == null ? "volume" : mount.type
+      src = mount.src
+      target = mount.target
+      readonly = lookup(mount, "readonly", null) == null ? false : mount.readonly
+    }
+  ]
 }
