@@ -246,11 +246,12 @@ variable tags {
 
 variable timers {
   type = list(
-  object({
-    name = string,
-    schedule = string,
-    command = optional(list(string))
-  })
+    object({
+      name = string
+      schedule = string
+      command = optional(list(string))
+      user = optional(string)
+    })
   )
   default = []
   description = "Scheduled timers to execute on instances."

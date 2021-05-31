@@ -20,6 +20,7 @@ locals {
       name = timer.name
       schedule = timer.schedule
       command = lookup(timer, "command", [])
+      user = lookup(timer, "user", null)
     }
   ]
 
