@@ -194,7 +194,7 @@ variable metadata {
 
 variable mounts {
   type = set(string)
-  default = []
+  default = null
   description = "Volumes to mount into the worker containers. Must be defined in `var.available_mounts`."
 }
 

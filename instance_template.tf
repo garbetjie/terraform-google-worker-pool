@@ -40,7 +40,7 @@ resource google_compute_instance_template template {
             restart_sec = var.restart_interval
             expose_ports = local.expose_ports
             available_mounts = local.formatted_available_mounts
-            mounts = var.mounts
+            mounts = local.mounts
             user = var.user
           })
         }, {

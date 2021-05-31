@@ -21,7 +21,7 @@ locals {
       schedule = timer.schedule
       command = lookup(timer, "command", [])
       user = lookup(timer, "user", null)
-      mounts = lookup(timer, "mounts", null) == null ? var.mounts : timer.mounts
+      mounts = lookup(timer, "mounts", null) == null ? local.mounts : timer.mounts
     }
   ]
 
@@ -76,4 +76,7 @@ locals {
         mount.readonly ? ",readonly" : ""
       )
   }
+
+  // Default the specified mounts
+  mounts = var.mounts == null ? toset(keys(local.available_mounts)) : var.mounts
 }
