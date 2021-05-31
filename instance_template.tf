@@ -40,6 +40,7 @@ resource google_compute_instance_template template {
             restart_sec = var.restart_interval
             expose_ports = local.expose_ports
             mounts = local.mounts
+            user = var.user
           })
         }, {
           path = "/etc/runtime/env"

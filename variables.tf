@@ -262,6 +262,12 @@ variable timezone {
   description = "Timezone to use on instances. See the \"TZ database name\" column on https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for an indication as to available timezone names."
 }
 
+variable user {
+  type = string
+  default = null
+  description = "User to run workers as."
+}
+
 variable wait_for_instances {
   type = bool
   default = false

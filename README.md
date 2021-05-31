@@ -220,6 +220,7 @@ be recreated in the worker pool.
 | timers.*.schedule                | The schedule on which this timer should run. The [`OnCalendar`](https://www.freedesktop.org/software/systemd/man/systemd.timer.html#OnCalendar=) format is used.                      | string                                                                                                                  |                 | Yes      |
 | timers.*.command                 | Arguments to pass to the timer. See the notes about [argument escaping](#argument-escaping) for information on formatting.                                                            | list(string)                                                                                                            | `[]`            | No       |
 | timezone                         | Timezone to use on instances. See the "TZ database name" column on https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for an indication as to available timezone names.     | string                                                                                                                  | `"Etc/UTC"`     | No       |
+| user                             | User to run workers as. Passed to the `-u` flag when running workers.                                                                                                                 | string                                                                                                                  | `null`          | No       |
 | wait_for_instances               | Wait for instances to stabilise starting after updating the pool's instance group.                                                                                                    | bool                                                                                                                    | `false`         | No       |
 
 # Outputs
@@ -235,6 +236,9 @@ All inputs are exported as outputs. There are additional outputs as defined belo
 | tag                              | Unique tag generated for instance targeting in firewall rules.    | string |
 
 # Changelog
+
+* **1.5.0**
+  * Add ability to specify user workers run as.
 
 * **1.4.0**
   * Add mounting of volumes into workers.
