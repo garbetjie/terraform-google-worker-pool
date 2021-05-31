@@ -15,7 +15,7 @@ ExecStart=/usr/bin/docker run \
   --name=${systemd_name}-%i \
   --label part-of=worker \
   --env-file /etc/runtime/env \
-%{ if user != null } -u ${user} \
+%{ if user != null }  -u ${user} \
 %{ endif ~}
 %{ if length(mounts) > 0 }  --mount ${join(" --mount ", [for m in mounts: "type=${m.type},src=${m.src},dst=${m.target}${m.readonly ? ",readonly" : ""}"])} \
 %{ endif ~}
