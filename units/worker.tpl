@@ -17,11 +17,11 @@ ExecStart=/usr/bin/docker run \
   --env-file /etc/runtime/env \
 %{ if user != null }  -u ${user} \
 %{ endif ~}
-%{ if length(mounts) > 0 }  --mount ${join(" --mount ", [for m in mounts: "type=${m.type},src=${m.src},dst=${m.target}${m.readonly ? ",readonly" : ""}"])} \
-%{ endif ~}
-%{ if length(expose_ports) > 0 }  -p ${join(" -p ", formatlist("%s:%d:%d/%s", expose_ports.*.host, expose_ports.*.port, expose_ports.*.container_port, expose_ports.*.protocol))} \
+%{ if length(mounts) > 0 }  --mount ${join(" --mount ", [for m in mounts: available_mounts[m]])} \
 %{ endif ~}
 %{ if requires_cloudsql }  -v cloudsql:${cloudsql_path}:ro \
+%{ endif ~}
+%{ if length(expose_ports) > 0 }  -p ${join(" -p ", formatlist("%s:%d:%d/%s", expose_ports.*.host, expose_ports.*.port, expose_ports.*.container_port, expose_ports.*.protocol))} \
 %{ endif ~}
   ${image} ${join(" ", formatlist("$${ARG%d}", range(length(command))))}
 ExecStop=-/usr/bin/docker stop ${systemd_name}-%i

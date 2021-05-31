@@ -5,16 +5,19 @@ After=docker.service ${requires_cloudsql ? "cloudsql.service": ""}
 [Service]
 Type=oneshot
 Environment=HOME=/etc/runtime
-EnvironmentFile=/etc/runtime/args/timer-${timer.name}
+EnvironmentFile=/etc/runtime/args/timer-${name}
 %{ if wait_for_cloudsql }ExecStartPre=/bin/sh /tmp/scripts/wait-for-cloudsql.sh
 %{ endif ~}
 ExecStart=/usr/bin/docker run \
   --rm \
-  --name=${timer.name} \
+  --name=${name} \
   --label part-of=timer \
   --env-file /etc/runtime/env \
-%{ if timer.user != null }  -u ${timer.user} \
+%{ if user != null }  -u ${user} \
 %{ endif ~}
-  ${requires_cloudsql ? "-v cloudsql:${cloudsql_path}:ro" : ""} \
-  ${image} ${join(" ", formatlist("$${ARG%d}", range(length(timer.command))))}
-ExecStop=-/usr/bin/docker stop ${timer.name}
+%{ if length(mounts) > 0 }  --mount ${join(" --mount ", [for m in mounts: available_mounts[m]])} \
+%{ endif ~}
+%{ if requires_cloudsql }  -v cloudsql:${cloudsql_path}:ro \
+%{ endif ~}
+  ${image} ${join(" ", formatlist("$${ARG%d}", range(length(command))))}
+ExecStop=-/usr/bin/docker stop ${name}

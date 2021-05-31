@@ -21,6 +21,7 @@ locals {
       schedule = timer.schedule
       command = lookup(timer, "command", [])
       user = lookup(timer, "user", null)
+      mounts = lookup(timer, "mounts", null) == null ? var.mounts : timer.mounts
     }
   ]
 
@@ -51,13 +52,28 @@ locals {
     }
   ]
 
-  // Format the mounts.
-  mounts = [
-    for mount in var.mounts: {
-      type = lookup(mount, "type", null) == null ? "volume" : mount.type
-      src = mount.src
-      target = mount.target
-      readonly = lookup(mount, "readonly", null) == null ? false : mount.readonly
-    }
-  ]
+  // Format the values in available mounts.
+  available_mounts = {
+    for mount in var.available_mounts:
+      mount.name => {
+        name = mount.name
+        type = lookup(mount, "type", null) == null ? "volume" : mount.type
+        src = mount.src
+        target = mount.target
+        readonly = lookup(mount, "readonly", null) == null ? false : mount.readonly
+      }
+  }
+
+  // Provide each available mount specified as a string that can be used in templates. Simplifies the string creation
+  // in templates.
+  formatted_available_mounts = {
+    for mount in local.available_mounts:
+      mount.name => format(
+        "type=%s,src=%s,dst=%s%s",
+        mount.type,
+        mount.src,
+        mount.target,
+        mount.readonly ? ",readonly" : ""
+      )
+  }
 }

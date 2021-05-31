@@ -39,7 +39,8 @@ resource google_compute_instance_template template {
             restart = var.restart_policy
             restart_sec = var.restart_interval
             expose_ports = local.expose_ports
-            mounts = local.mounts
+            available_mounts = local.formatted_available_mounts
+            mounts = var.mounts
             user = var.user
           })
         }, {
@@ -100,7 +101,11 @@ resource google_compute_instance_template template {
             wait_for_cloudsql = local.wait_for_cloudsql
             cloudsql_path = var.cloudsql_path
             image = var.image
-            timer = timer
+            user = timer.user
+            name = timer.name
+            command = timer.command
+            mounts = timer.mounts
+            available_mounts = local.formatted_available_mounts
           })
         }],
 

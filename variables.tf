@@ -18,6 +18,18 @@ variable workers_per_instance {
   description = "Number of workers to start up per instance."
 }
 
+variable available_mounts {
+  type = list(object({
+    name = string
+    type = optional(string)
+    src = string
+    target = string
+    readonly = optional(bool)
+  }))
+  default = []
+  description = "Volumes to mount into the worker containers."
+}
+
 variable command {
   type = list(string)
   default = []
@@ -181,14 +193,9 @@ variable metadata {
 }
 
 variable mounts {
-  type = list(object({
-    type = optional(string)
-    src = string
-    target = string
-    readonly = optional(bool)
-  }))
+  type = set(string)
   default = []
-  description = "Volumes to mount into the worker containers."
+  description = "Volumes to mount into the worker containers. Must be defined in `var.available_mounts`."
 }
 
 variable network {
@@ -251,6 +258,7 @@ variable timers {
       schedule = string
       command = optional(list(string))
       user = optional(string)
+      mounts = optional(set(string))
     })
   )
   default = []
