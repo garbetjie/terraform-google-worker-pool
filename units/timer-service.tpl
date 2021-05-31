@@ -6,7 +6,7 @@ After=docker.service ${requires_cloudsql ? "cloudsql.service": ""}
 Type=oneshot
 Environment=HOME=/etc/runtime
 EnvironmentFile=/etc/runtime/args/timer-${name}
-%{ if wait_for_cloudsql }ExecStartPre=/bin/sh /tmp/scripts/wait-for-cloudsql.sh
+%{ if wait_for_cloudsql }ExecStartPre=/bin/sh /etc/runtime/scripts/wait-for-cloudsql.sh
 %{ endif ~}
 ExecStart=/usr/bin/docker run \
   --rm \

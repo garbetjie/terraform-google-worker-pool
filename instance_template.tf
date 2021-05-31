@@ -117,7 +117,7 @@ resource google_compute_instance_template template {
             health_check_port = var.health_check_port
           })
         }, {
-          path = "/tmp/scripts/healthcheck.sh"
+          path = "/etc/runtime/scripts/healthcheck.sh"
           permissions = "0644"
           content = templatefile("${path.module}/scripts/healthcheck.sh.tpl", {
             expected_count = sum([var.workers_per_instance, local.requires_cloudsql ? 1 : 0])
@@ -126,7 +126,7 @@ resource google_compute_instance_template template {
 
         // Ensure script files are available.
         [{
-          path = "/tmp/scripts/wait-for-cloudsql.sh"
+          path = "/etc/runtime/scripts/wait-for-cloudsql.sh"
           permissions = "0644"
           content = templatefile("${path.module}/scripts/wait-for-cloudsql.sh.tpl", {
             wait_duration = local.cloudsql_wait_duration
