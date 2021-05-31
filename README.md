@@ -239,7 +239,7 @@ All inputs are exported as outputs. There are additional outputs as defined belo
 # Changelog
 
 * **1.5.0**
-  * Add ability to specify user workers run as.
+  * Add ability to specify user workers & timers run as.
 
 * **1.4.0**
   * Add mounting of volumes into workers.
