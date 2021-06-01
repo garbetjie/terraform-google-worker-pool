@@ -15,11 +15,11 @@ resource google_compute_region_instance_group_manager manager {
   }
 
   dynamic "auto_healing_policies" {
-    for_each = var.health_check_enabled ? [google_compute_health_check.instance_health[0].self_link] : []
+    for_each = local.health_check_enabled ? [google_compute_health_check.instance_health[0].self_link] : []
 
     content {
       health_check = auto_healing_policies.value
-      initial_delay_sec = var.health_check_initial_delay
+      initial_delay_sec = local.health_check_initial_delay
     }
   }
 
@@ -44,11 +44,11 @@ resource google_compute_instance_group_manager manager {
   }
 
   dynamic "auto_healing_policies" {
-    for_each = var.health_check_enabled ? [google_compute_health_check.instance_health[0].self_link] : []
+    for_each = local.health_check_enabled ? [google_compute_health_check.instance_health[0].self_link] : []
 
     content {
       health_check = auto_healing_policies.value
-      initial_delay_sec = var.health_check_initial_delay
+      initial_delay_sec = local.health_check_initial_delay
     }
   }
 

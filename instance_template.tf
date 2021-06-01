@@ -31,7 +31,7 @@ resource google_compute_instance_template template {
         ],
 
         // Populate systemd unit files.
-        [for file, content in merge(local.worker_unit_files, local.timer_unit_files, local.cloudsql_unit_files):
+        [for file, content in merge(local.worker_unit_files, local.timer_unit_files, local.cloudsql_unit_files, local.health_check_unit_files):
           { path = "/etc/systemd/system/${file}", permissions = "0644", content = content }
         ],
 
@@ -46,24 +46,9 @@ resource google_compute_instance_template template {
         ],
 
         // Populate script files.
-        [for file, content in local.cloudsql_script_files:
+        [for file, content in merge(local.cloudsql_script_files, local.health_check_script_files):
           { path = "/etc/runtime/scripts/${file}", permissions = "0644", content = content }
         ],
-
-        var.health_check_enabled ? [{
-          path = "/etc/systemd/system/healthcheck.service"
-          permissions = "0644"
-          content = templatefile("${path.module}/units/healthcheck.service.tpl", {
-            container_name = "healthcheck-${random_id.health_check_container_suffix.hex}",
-            health_check_port = var.health_check_port
-          })
-        }, {
-          path = "/etc/runtime/scripts/healthcheck.sh"
-          permissions = "0644"
-          content = templatefile("${path.module}/scripts/healthcheck.sh.tpl", {
-            expected_count = sum([local.worker_replicas, local.cloudsql_required ? 1 : 0])
-          })
-        }] : [],
       ),
 
       runcmd = concat(
@@ -73,7 +58,7 @@ resource google_compute_instance_template template {
         var.runcmd,
         local.worker_replicas > 0 ? ["systemctl start $(printf '${local.worker_name}@%02d ' $(seq 1 ${local.worker_replicas}))"] : [],
         length(local.timer_names) > 0 ? ["systemctl start ${join(" ", formatlist("%s.timer", distinct(local.timer_names)))}"]: [],
-        var.health_check_enabled ? ["systemctl start healthcheck"] : [],
+        local.health_check_enabled ? ["systemctl start healthcheck"] : [],
       )
     })])
   })
