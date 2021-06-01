@@ -34,6 +34,10 @@ locals {
   }
 }
 
+resource random_id health_check_container_suffix {
+  byte_length = 4
+}
+
 resource google_compute_health_check instance_health {
   count = local.health_check_enabled ? 1 : 0
   name = local.health_check_name
