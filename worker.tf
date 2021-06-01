@@ -1,4 +1,4 @@
-variable worker {
+variable workers {
   type = object({
     name = optional(string)
     command = optional(list(string))
@@ -26,19 +26,19 @@ variable worker {
 }
 
 locals {
-  worker_name = var.worker.name == null ? "worker" : var.worker.name
-  worker_command = var.worker.command == null ? [] : var.worker.command
-  worker_env = var.worker.env == null ? {} : var.worker.env
-  worker_image = var.worker.image
-  worker_replicas = var.worker.replicas
-  worker_user = var.worker.user
-  worker_expose = var.worker.expose == null ? [] : [
-    for expose in var.worker.expose: templatefile("${path.module}/templates/partial-expose.tpl", { expose = expose })
+  worker_name = var.workers.name == null ? "worker" : var.workers.name
+  worker_command = var.workers.command == null ? [] : var.workers.command
+  worker_env = var.workers.env == null ? {} : var.workers.env
+  worker_image = var.workers.image
+  worker_replicas = var.workers.replicas
+  worker_user = var.workers.user
+  worker_expose = var.workers.expose == null ? [] : [
+    for expose in var.workers.expose: templatefile("${path.module}/templates/partial-expose.tpl", { expose = expose })
   ]
-  worker_mounts = var.worker.mounts == null ? [] : [
-    for mount in var.worker.mounts: templatefile("${path.module}/templates/partial-mount.tpl", { mount = mount })
+  worker_mounts = var.workers.mounts == null ? [] : [
+    for mount in var.workers.mounts: templatefile("${path.module}/templates/partial-mount.tpl", { mount = mount })
   ]
-  init_commands = var.worker.init_commands == null ? [] : var.worker.init_commands
+  init_commands = var.workers.init_commands == null ? [] : var.workers.init_commands
   
   // Build worker arg file.
   worker_arg_files = {

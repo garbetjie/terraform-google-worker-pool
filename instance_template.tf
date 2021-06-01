@@ -30,18 +30,25 @@ resource google_compute_instance_template template {
           { path = "/etc/docker/daemon.json", permissions = "0644", content = local.docker_config_contents },
         ],
 
-        // Populate worker files.
-        [for f, c in local.worker_arg_files: { path = "/etc/runtime/args/${f}", permissions = "0644", content = c }],
-        [for f, c in local.worker_env_files: { path = "/etc/runtime/envs/${f}", permissions = "0644", content = c }],
-        [for f, c in local.worker_unit_files: { path = "/etc/systemd/system/${f}", permissions = "0644", content = c }],
+        // Populate systemd unit files.
+        [for file, content in merge(local.worker_unit_files, local.timer_unit_files, local.cloudsql_unit_files):
+          { path = "/etc/systemd/system/${file}", permissions = "0644", content = content }
+        ],
 
-        // Populate timer files.
-        [for f, c in local.timer_arg_files: { path = "/etc/runtime/args/${f}", permissions = "0644", content = c }],
-        [for f, c in local.timer_env_files: { path = "/etc/runtime/envs/${f}", permissions = "0644", content = c }],
-        [for f, c in local.timer_unit_files: { path = "/etc/systemd/system/${f}", permissions = "0644", content = c }],
+        // Populate arg files.
+        [for file, content in merge(local.worker_arg_files, local.timer_arg_files):
+          { path = "/etc/runtime/args/${file}", permissions = "0644", content = content }
+        ],
 
-        // Populate CloudSQL files.
-        [for f, c in local.cloudsql_unit_files: { path = "/etc/systemd/system/${f}", permissions = "0644", content = c }],
+        // Populate env files.
+        [for file, content in merge(local.worker_env_files, local.timer_env_files):
+          { path = "/etc/runtime/envs/${file}", permissions = "0644", content = content }
+        ],
+
+        // Populate script files.
+        [for file, content in local.cloudsql_script_files:
+          { path = "/etc/runtime/scripts/${file}", permissions = "0644", content = content }
+        ],
 
         var.health_check_enabled ? [{
           path = "/etc/systemd/system/healthcheck.service"
@@ -57,15 +64,6 @@ resource google_compute_instance_template template {
             expected_count = sum([local.worker_replicas, local.cloudsql_required ? 1 : 0])
           })
         }] : [],
-
-        // Ensure script files are available.
-        [{
-          path = "/etc/runtime/scripts/wait-for-cloudsql.sh"
-          permissions = "0644"
-          content = templatefile("${path.module}/scripts/wait-for-cloudsql.sh.tpl", {
-            wait_duration = local.cloudsql_wait_duration
-          })
-        }]
       ),
 
       runcmd = concat(
