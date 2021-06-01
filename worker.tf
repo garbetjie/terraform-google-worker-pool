@@ -77,3 +77,17 @@ locals {
     })
   }
 }
+
+output workers {
+  value = {
+    name = local.worker_name
+    command = local.worker_command
+    env = local.worker_env
+    image = local.worker_image
+    replicas = local.worker_replicas
+    user = local.worker_user
+    expose = local.worker_expose
+    mounts = local.worker_mounts
+    init_commands = local.worker_init_commands
+  }
+}

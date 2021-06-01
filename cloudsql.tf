@@ -76,3 +76,13 @@ locals {
     })
   }
 }
+
+output cloudsql {
+  value = {
+    connections = local.cloudsql_connections
+    mount_path = local.cloudsql_mount_path
+    restart_interval = local.cloudsql_restart_interval
+    restart_policy = local.cloudsql_restart_policy
+    wait_duration = local.cloudsql_wait_duration
+  }
+}
