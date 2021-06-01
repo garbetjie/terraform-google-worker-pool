@@ -3,19 +3,9 @@ variable name {
   description = "Name of the pool."
 }
 
-variable image {
-  type = string
-  description = "Docker image on which the workers are based."
-}
-
 variable location {
   type = string
   description = "Zone or region in which to create the pool."
-}
-
-variable workers_per_instance {
-  type = number
-  description = "Number of workers to start up per instance."
 }
 
 variable available_mounts {
@@ -28,12 +18,6 @@ variable available_mounts {
   }))
   default = []
   description = "Volumes to mount into the worker containers."
-}
-
-variable command {
-  type = list(string)
-  default = []
-  description = "Command to run in workers. See README for line break support."
 }
 
 variable cloudsql_connections {
@@ -85,32 +69,6 @@ variable disk_type {
   validation {
     condition = contains(["pd-ssd", "local-ssd", "pd-balanced", "pd-standard"], var.disk_type)
     error_message = "Disk type must be one of [pd-ssd, local-ssd, pd-balanced, pd-standard]."
-  }
-}
-
-variable env {
-  type = map(string)
-  default = {}
-  description = "Environment variables to inject into workers and timers."
-}
-
-variable expose_ports {
-  type = list(object({
-    port = number
-    protocol = optional(string)
-    container_port = optional(number)
-    host = optional(string)
-  }))
-  default = []
-  description = "Container ports to be exposed on the host."
-
-  validation {
-    error_message = "Protocol must be one of [udp, tcp]."
-    condition = alltrue([
-      for p in var.expose_ports:
-        contains(["tcp", "udp"], lower(p.protocol))
-      if p.protocol != null
-    ])
   }
 }
 
@@ -192,12 +150,6 @@ variable metadata {
   description = "Additional metadata to add to instances. Keys used by this module will be overwritten."
 }
 
-variable mounts {
-  type = set(string)
-  default = null
-  description = "Volumes to mount into the worker containers. Must be defined in `var.available_mounts`."
-}
-
 variable network {
   type = string
   default = "default"
@@ -271,14 +223,34 @@ variable timezone {
   description = "Timezone to use on instances. See the \"TZ database name\" column on https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for an indication as to available timezone names."
 }
 
-variable user {
-  type = string
-  default = null
-  description = "User to run workers as."
-}
-
 variable wait_for_instances {
   type = bool
   default = false
   description = "Wait for instances to stabilise starting after updating the pool's instance group."
+}
+
+variable worker {
+  type = object({
+    command = optional(list(string))
+    env = optional(map(string))
+    image = string
+    replicas = number
+    user = optional(string)
+    expose = optional(list(object({
+      port = number
+      protocol = optional(string)
+      container_port = optional(number)
+      host = optional(string)
+    })))
+    mounts = optional(list(object({
+      name = string
+      src = string
+      target = string
+      type = optional(string)
+      readonly = optional(bool)
+    })))
+    init_commands = optional(list(object({
+      command = list(string)
+    })))
+  })
 }
