@@ -30,24 +30,12 @@ output name {
   value = var.name
 }
 
-output image {
-  value = var.image
-}
-
 output location {
   value = var.location
 }
 
 output metadata {
   value = google_compute_instance_template.template.metadata
-}
-
-output workers_per_instance {
-  value = var.workers_per_instance
-}
-
-output command {
-  value = var.command
 }
 
 output cloudsql_connections {
@@ -76,14 +64,6 @@ output disk_size {
 
 output disk_type {
   value = var.disk_type
-}
-
-output env {
-  value = var.env
-}
-
-output expose_ports {
-  value = local.expose_ports
 }
 
 output health_check_enabled {
