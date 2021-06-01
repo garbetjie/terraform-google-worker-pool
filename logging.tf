@@ -1,7 +1,7 @@
 variable logging {
   type = object({
     driver = optional(string)
-    options = option(map(string))
+    options = optional(map(string))
   })
 
   default = {
