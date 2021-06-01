@@ -26,46 +26,15 @@ resource google_compute_instance_template template {
   metadata = merge(var.metadata, {
     user-data = join("\n", ["#cloud-config", yamlencode({
       write_files = concat(
-        [{
-          path = "/etc/systemd/system/${var.systemd_name}@.service"
-          permissions = "0644"
-          content = templatefile("${path.module}/units/worker.tpl", {
-            requires_cloudsql = local.requires_cloudsql
-            wait_for_cloudsql = local.wait_for_cloudsql
-            cloudsql_path = var.cloudsql_path
-            image = var.image
-            command = var.command
-            systemd_name = var.systemd_name
-            restart = var.restart_policy
-            restart_sec = var.restart_interval
-            expose_ports = local.expose_ports
-            available_mounts = local.formatted_available_mounts
-            mounts = local.mounts
-            user = var.user
-          })
-        }, {
-          path = "/etc/runtime/env"
-          permissions = "0644"
-          owner = "chronos:chronos"
-          content = join("\n", concat(
-            [for key, value in var.env: "${key}=${value}"],
-            [""]
-          ))
-        }, {
-          path = "/etc/docker/daemon.json",
-          permissions = "0644"
-          content = jsonencode({
-            log-driver = var.log_driver,
-            log-opts = local.log_opts
-          })
-        }, {
-          path = "/etc/runtime/args/worker"
-          permissions = "0644"
-          content = join("\n", concat([
-            for index in range(length(var.command)):
-              "${format("ARG%d", index)}=${var.command[index]}"
-          ], [""]))
-        }],
+        [
+          // Set docker config.
+          { path = "/etc/docker/daemon.json", permissions = "0644", content = local.docker_config_contents },
+
+          // Populate worker files.
+          { path = "/etc/runtime/args/${local.worker_arg_file}", permissions = "0644", content = local.worker_arg_file_contents },
+          { path = "/etc/runtime/envs/${local.worker_env_file}", permissions = "0644", content = local.worker_env_file_contents },
+          { path = "/etc/systemd/system/${local.worker_unit_file}", permissions = "0644", content = local.worker_unit_file_contents }
+        ],
 
         // Create the CloudSQL service.
         local.requires_cloudsql ? [{
@@ -100,7 +69,7 @@ resource google_compute_instance_template template {
             requires_cloudsql = local.requires_cloudsql
             wait_for_cloudsql = local.wait_for_cloudsql
             cloudsql_path = var.cloudsql_path
-            image = var.image
+            image = local.worker.image
             user = timer.user
             name = timer.name
             command = timer.command
@@ -120,7 +89,7 @@ resource google_compute_instance_template template {
           path = "/etc/runtime/scripts/healthcheck.sh"
           permissions = "0644"
           content = templatefile("${path.module}/scripts/healthcheck.sh.tpl", {
-            expected_count = sum([var.workers_per_instance, local.requires_cloudsql ? 1 : 0])
+            expected_count = sum([local.worker.replicas, local.requires_cloudsql ? 1 : 0])
           })
         }] : [],
 
@@ -139,7 +108,7 @@ resource google_compute_instance_template template {
         ["systemctl daemon-reload", "systemctl restart docker"],
         ["HOME=/etc/runtime docker-credential-gcr configure-docker"],
         var.runcmd,
-        var.workers_per_instance > 0 ? ["systemctl start $(printf '${var.systemd_name}@%02d ' $(seq 1 ${var.workers_per_instance}))"] : [],
+        local.worker.replicas > 0 ? ["systemctl start $(printf '${var.systemd_name}@%02d ' $(seq 1 ${local.worker.replicas}))"] : [],
         length(local.timers) > 0 ? ["systemctl start ${join(" ", formatlist("%s.timer", distinct(local.timers.*.name)))}"]: [],
         var.health_check_enabled ? ["systemctl start healthcheck"] : [],
       )

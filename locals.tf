@@ -21,7 +21,8 @@ locals {
       schedule = timer.schedule
       command = lookup(timer, "command", [])
       user = lookup(timer, "user", null)
-      mounts = lookup(timer, "mounts", null) == null ? local.mounts : timer.mounts
+      mounts = []
+//      mounts = lookup(timer, "mounts", null) == null ? local.mounts : timer.mounts
     }
   ]
 
@@ -77,6 +78,19 @@ locals {
       )
   }
 
-  // Default the specified mounts
-  mounts = var.mounts == null ? toset(keys(local.available_mounts)) : var.mounts
+  base_path = "/etc/runtime"
+
+  cloudsql_mounts = local.requires_cloudsql ? [templatefile("${path.module}/parts/mount.tpl", {
+    mount = {
+      type = "volume"
+      src = "cloudsql"
+      target = var.cloudsql_path
+      readonly = true
+    }
+  })] : []
+
+  cloudsql_pre_start = local.wait_for_cloudsql ? ["/bin/sh /etc/runtime/scripts/wait-for-cloudsql.sh"] : []
+
+  // Build docker config.
+  docker_config_contents = jsonencode({ log-driver = var.log_driver, log-opts = local.log_opts })
 }
