@@ -27,36 +27,21 @@ resource google_compute_instance_template template {
     user-data = join("\n", ["#cloud-config", yamlencode({
       write_files = concat(
         [
-          // Set docker config.
           { path = "/etc/docker/daemon.json", permissions = "0644", content = local.docker_config_contents },
-
-          // Populate worker files.
-          { path = "/etc/runtime/args/${local.worker_arg_file}", permissions = "0644", content = local.worker_arg_file_contents },
-          { path = "/etc/runtime/envs/${local.worker_env_file}", permissions = "0644", content = local.worker_env_file_contents },
-          { path = "/etc/systemd/system/${local.worker_unit_file}", permissions = "0644", content = local.worker_unit_file_contents },
         ],
 
-        // Populate timer files.
-        [for file, contents in local.timer_arg_file_contents: {
-          path = "/etc/runtime/args/${file}", permissions = "0644", content = contents
-        }],
-        [for file, contents in local.timer_env_file_contents: {
-          path = "/etc/runtime/envs/${file}", permissions = "0644", content = contents
-        }],
-        [for file, contents in local.timer_unit_file_contents: {
-          path = "/etc/systemd/system/${file}", permissions = "0644", content = contents
-        }],
+        // Populate worker files.
+        [for f, c in local.worker_arg_files: { path = "/etc/runtime/args/${f}", permissions = "0644", content = c }],
+        [for f, c in local.worker_env_files: { path = "/etc/runtime/envs/${f}", permissions = "0644", content = c }],
+        [for f, c in local.worker_unit_files: { path = "/etc/systemd/system/${f}", permissions = "0644", content = c }],
 
-        // Create the CloudSQL service.
-        local.requires_cloudsql ? [{
-          path = "/etc/systemd/system/cloudsql.service"
-          permissions = "0644"
-          content = templatefile("${path.module}/units/cloudsql.tpl", {
-            connections = var.cloudsql_connections
-            restart_sec = var.cloudsql_restart_interval
-            restart = var.cloudsql_restart_policy
-          })
-        }] : [],
+        // Populate timer files.
+        [for f, c in local.timer_arg_files: { path = "/etc/runtime/args/${f}", permissions = "0644", content = c }],
+        [for f, c in local.timer_env_files: { path = "/etc/runtime/envs/${f}", permissions = "0644", content = c }],
+        [for f, c in local.timer_unit_files: { path = "/etc/systemd/system/${f}", permissions = "0644", content = c }],
+
+        // Populate CloudSQL files.
+        [for f, c in local.cloudsql_unit_files: { path = "/etc/systemd/system/${f}", permissions = "0644", content = c }],
 
         var.health_check_enabled ? [{
           path = "/etc/systemd/system/healthcheck.service"
@@ -69,7 +54,7 @@ resource google_compute_instance_template template {
           path = "/etc/runtime/scripts/healthcheck.sh"
           permissions = "0644"
           content = templatefile("${path.module}/scripts/healthcheck.sh.tpl", {
-            expected_count = sum([local.worker.replicas, local.requires_cloudsql ? 1 : 0])
+            expected_count = sum([local.worker_replicas, local.cloudsql_required ? 1 : 0])
           })
         }] : [],
 
@@ -88,8 +73,8 @@ resource google_compute_instance_template template {
         ["systemctl daemon-reload", "systemctl restart docker"],
         ["HOME=/etc/runtime docker-credential-gcr configure-docker"],
         var.runcmd,
-        local.worker.replicas > 0 ? ["systemctl start $(printf '${var.systemd_name}@%02d ' $(seq 1 ${local.worker.replicas}))"] : [],
-        length(local.timers) > 0 ? ["systemctl start ${join(" ", formatlist("%s.timer", distinct(local.timers.*.name)))}"]: [],
+        local.worker_replicas > 0 ? ["systemctl start $(printf '${local.worker_name}@%02d ' $(seq 1 ${local.worker_replicas}))"] : [],
+        length(local.timer_names) > 0 ? ["systemctl start ${join(" ", formatlist("%s.timer", distinct(local.timer_names)))}"]: [],
         var.health_check_enabled ? ["systemctl start healthcheck"] : [],
       )
     })])

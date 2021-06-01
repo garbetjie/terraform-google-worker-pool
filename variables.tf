@@ -20,41 +20,6 @@ variable available_mounts {
   description = "Volumes to mount into the worker containers."
 }
 
-variable cloudsql_connections {
-  type = set(string)
-  default = []
-  description = "List of CloudSQL connections to establish before starting workers."
-}
-
-variable cloudsql_path {
-  type = string
-  default = "/cloudsql"
-  description = "The path at which CloudSQL connection sockets will be available in workers and timers."
-}
-
-variable cloudsql_restart_interval {
-  type = number
-  default = 5
-  description = "Number of seconds to wait before restarting the CloudSQL service if it stops."
-}
-
-variable cloudsql_restart_policy {
-  type = string
-  default = "always"
-  description = "The restart policy to apply to the CloudSQL service."
-
-  validation {
-    condition = contains(["no", "on-success", "on-failure", "on-abnormal", "on-watchdog", "on-abort", "always"], var.cloudsql_restart_policy)
-    error_message = "CloudSQL restart policy must be one of [always, no, on-success, on-failure, on-abnormal, on-watchdog, on-abort]."
-  }
-}
-
-variable cloudsql_wait_duration {
-  type = number
-  default = 30
-  description = "How long to wait (in seconds) for CloudSQL connections to be established before starting workers."
-}
-
 variable disk_size {
   type = number
   default = 25
@@ -191,19 +156,11 @@ variable service_account_email {
   description = "Service account to assign to the pool."
 }
 
-variable systemd_name {
-  type = string
-  default = "worker"
-  description = "Name of the systemd service for workers. This is configurable to ensure it doesn't clash with names of timers."
-}
-
 variable tags {
   type = list(string)
   default = []
   description = "Network tags to apply to instances in the pool."
 }
-
-
 
 variable timezone {
   type = string

@@ -138,10 +138,6 @@ output service_account_email {
   value = var.service_account_email
 }
 
-output systemd_name {
-  value = var.systemd_name
-}
-
 output tags {
   value = var.tags
 }

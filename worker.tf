@@ -1,5 +1,6 @@
 variable worker {
   type = object({
+    name = optional(string)
     command = optional(list(string))
     env = optional(map(string))
     image = string
@@ -25,60 +26,54 @@ variable worker {
 }
 
 locals {
-  worker = {
-    // TODO add restart policy, restart interval
-    command = var.worker.command == null ? [] : var.worker.command
-    env = var.worker.env == null ? {} : var.worker.env
-    image = var.worker.image
-    replicas = var.worker.replicas
-    user = var.worker.user
-    expose = var.worker.expose == null ? [] : [
-      for expose in var.worker.expose: templatefile("${path.module}/parts/expose.tpl", { expose = expose })
-    ]
-    mounts = var.worker.mounts == null ? [] : [
-      for mount in var.worker.mounts: templatefile("${path.module}/parts/mount.tpl", { mount = mount })
-    ]
-    init_commands = var.worker.init_commands == null ? [] : var.worker.init_commands
+  worker_name = var.worker.name == null ? "worker" : var.worker.name
+  worker_command = var.worker.command == null ? [] : var.worker.command
+  worker_env = var.worker.env == null ? {} : var.worker.env
+  worker_image = var.worker.image
+  worker_replicas = var.worker.replicas
+  worker_user = var.worker.user
+  worker_expose = var.worker.expose == null ? [] : [
+    for expose in var.worker.expose: templatefile("${path.module}/templates/partial-expose.tpl", { expose = expose })
+  ]
+  worker_mounts = var.worker.mounts == null ? [] : [
+    for mount in var.worker.mounts: templatefile("${path.module}/templates/partial-mount.tpl", { mount = mount })
+  ]
+  init_commands = var.worker.init_commands == null ? [] : var.worker.init_commands
+  
+  // Build worker arg file.
+  worker_arg_files = {
+    (local.worker_name) = join("\n", concat(
+      [for index in range(length(local.worker_command)): format("ARG%d=%s", index, local.worker_command[index])],
+      [""]
+    ))
   }
 
-
-  // Build worker arg file.
-  worker_arg_file = var.systemd_name
-
-  worker_arg_file_contents = join("\n", concat(
-    [for index in range(length(local.worker.command)): format("ARG%d=%s", index, local.worker.command[index])],
-    [""]
-  ))
-
-
   // Build worker env file.
-  worker_env_file = var.systemd_name
-
-  worker_env_file_contents = join("\n", concat(
-    [for k, v in local.worker.env: "${k}=${v}"],
-    [""]
-  ))
-
+  worker_env_files = {
+    (local.worker_name) = join("\n", concat(
+      [for k, v in local.worker_env: "${k}=${v}"],
+      [""]
+    ))
+  }
 
   // Build worker unit file.
-  worker_unit_file = "${var.systemd_name}@.service"
-
-  worker_unit_file_contents = templatefile("${path.module}/templates/systemd-service.tpl", {
-    type = "exec"
-    cloudsql_required = local.requires_cloudsql
-    cloudsql_wait = local.wait_for_cloudsql
-    arg_file = local.worker_arg_file
-    pre_start = []
-    stop = ""
-    start = templatefile("${path.module}/templates/docker-run.tpl", {
-      name = "${var.systemd_name}-%i"
-      env_file = var.systemd_name
-      user = local.worker.user
-      labels = { part-of = "worker" }
-      mounts = concat(local.cloudsql_mounts, local.worker.mounts)
-      expose = local.worker.expose
-      image = local.worker.image
-      command = local.worker.command
+  worker_unit_files = {
+    "${local.worker_name}@.service" = templatefile("${path.module}/templates/systemd-service.tpl", {
+      type = "exec"
+      requires = local.cloudsql_provided_requires
+      arg_file = keys(local.worker_arg_files)[0]
+      exec_start_pre = local.cloudsql_provided_exec_start_pre
+      exec_stop = templatefile("${path.module}/templates/docker-stop.tpl", { name = "${local.worker_name}-%i" })
+      exec_start = templatefile("${path.module}/templates/docker-run.tpl", {
+        name = "${local.worker_name}-%i"
+        env_file = keys(local.worker_env_files)[0]
+        user = local.worker_user
+        labels = { part-of = "worker" }
+        mounts = concat(local.cloudsql_provided_mounts, local.worker_mounts)
+        expose = local.worker_expose
+        image = local.worker_image
+        command = local.worker_command
+      })
     })
-  })
+  }
 }

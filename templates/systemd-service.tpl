@@ -1,14 +1,12 @@
 [Unit]
-Requires=docker.service ${cloudsql_required ? "cloudsql.service": ""}
-After=docker.service ${cloudsql_required ? "cloudsql.service": ""}
+Requires=docker.service ${join(" ", requires)}
+After=docker.service ${join(" ", requires)}
 
 [Service]
 Type=${type}
 Environment=HOME=/etc/runtime
 EnvironmentFile=/etc/runtime/args/${arg_file}
-%{ if cloudsql_wait }ExecStartPre=/bin/sh /etc/runtime/scripts/wait-for-cloudsql.sh
+%{ if length(exec_start_pre) > 0 }ExecStartPre=${join("\nExecStartPre=", exec_start_pre)}
 %{ endif ~}
-%{ if length(pre_start) > 0 }ExecStartPre=${join("\nExecStartPre=", pre_start)}
-%{ endif ~}
-ExecStart=${start}
-ExecStop=${stop}
+ExecStart=${exec_start}
+ExecStop=${exec_stop}
