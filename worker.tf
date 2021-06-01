@@ -38,7 +38,7 @@ locals {
   worker_mounts = var.workers.mounts == null ? [] : [
     for mount in var.workers.mounts: templatefile("${path.module}/templates/partial-mount.tpl", { mount = mount })
   ]
-  init_commands = var.workers.init_commands == null ? [] : var.workers.init_commands
+  worker_init_commands = var.workers.init_commands == null ? [] : var.workers.init_commands
   
   // Build worker arg file.
   worker_arg_files = {

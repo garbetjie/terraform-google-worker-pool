@@ -2,7 +2,7 @@ variable timers {
   type = list(
     object({
       schedule = string
-      command = list(string)
+      command = optional(list(string))
       name = optional(string)
       image = optional(string)
       user = optional(string)
@@ -22,16 +22,16 @@ variable timers {
 
 locals {
   // Build up correct defaults.
-  timer_names = [for i, t in var.timers: (t.name == null ? "timer-${format("%02d", i + 1)}" : "timer-${t.name}")]
-  timer_commands = [for t in var.timers: t.command]
+  timer_names = [for i, t in var.timers: (t.name == null || t.name == "" ? "timer-${format("%02d", i + 1)}" : t.name)]
+  timer_commands = [for t in var.timers: (t.command == null ? [] : t.command)]
   timer_schedules = [for t in var.timers: t.schedule]
   timer_images = [for t in var.timers: (t.image == null ? local.worker_image : t.image)]
   timer_users = [for t in var.timers: t.user]
   timer_envs = [for t in var.timers: (t.env == null ? local.worker_env : t.env)]
   timer_mounts = [for t in var.timers: (
-    t.mounts == null
-      ? local.worker_mounts
-      : [for m in t.mounts: templatefile("${path.module}/parts/mount.tpl", { mount = m })]
+    t.mounts == null ? local.worker_mounts : [
+      for m in t.mounts: templatefile("${path.module}/parts/mount.tpl", { mount = m })
+    ]
   )]
 
   // Build up timer arg files.

@@ -58,7 +58,7 @@ resource google_compute_instance_template template {
         var.runcmd,
         local.worker_replicas > 0 ? ["systemctl start $(printf '${local.worker_name}@%02d ' $(seq 1 ${local.worker_replicas}))"] : [],
         length(local.timer_names) > 0 ? ["systemctl start ${join(" ", formatlist("%s.timer", distinct(local.timer_names)))}"]: [],
-        local.health_check_enabled ? ["systemctl start healthcheck"] : [],
+        local.health_check_enabled ? ["systemctl start ${keys(local.health_check_unit_files)[0]}"] : [],
       )
     })])
   })
