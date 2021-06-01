@@ -33,8 +33,19 @@ resource google_compute_instance_template template {
           // Populate worker files.
           { path = "/etc/runtime/args/${local.worker_arg_file}", permissions = "0644", content = local.worker_arg_file_contents },
           { path = "/etc/runtime/envs/${local.worker_env_file}", permissions = "0644", content = local.worker_env_file_contents },
-          { path = "/etc/systemd/system/${local.worker_unit_file}", permissions = "0644", content = local.worker_unit_file_contents }
+          { path = "/etc/systemd/system/${local.worker_unit_file}", permissions = "0644", content = local.worker_unit_file_contents },
         ],
+
+        // Populate timer files.
+        [for file, contents in local.timer_arg_file_contents: {
+          path = "/etc/runtime/args/${file}", permissions = "0644", content = contents
+        }],
+        [for file, contents in local.timer_env_file_contents: {
+          path = "/etc/runtime/envs/${file}", permissions = "0644", content = contents
+        }],
+        [for file, contents in local.timer_unit_file_contents: {
+          path = "/etc/systemd/system/${file}", permissions = "0644", content = contents
+        }],
 
         // Create the CloudSQL service.
         local.requires_cloudsql ? [{
@@ -46,37 +57,6 @@ resource google_compute_instance_template template {
             restart = var.cloudsql_restart_policy
           })
         }] : [],
-
-        // Create the timers.
-        flatten([for timer in var.timers: [{
-          path = "/etc/systemd/system/${timer.name}.timer"
-          permissions = "0644"
-          content = templatefile("${path.module}/units/timer.tpl", { timer = timer })
-        }, {
-          path = "/etc/runtime/args/timer-${timer.name}"
-          permissions = "0644"
-          content = join("\n", concat([
-            for index in range(length(timer.command)):
-              "${format("ARG%d", index)}=${timer.command[index]}"
-          ], []))
-        }]]),
-
-        // Create the services for the timers.
-        [for timer in local.timers: {
-          path = "/etc/systemd/system/${timer.name}.service",
-          permissions = "0644"
-          content = templatefile("${path.module}/units/timer-service.tpl", {
-            requires_cloudsql = local.requires_cloudsql
-            wait_for_cloudsql = local.wait_for_cloudsql
-            cloudsql_path = var.cloudsql_path
-            image = local.worker.image
-            user = timer.user
-            name = timer.name
-            command = timer.command
-            mounts = timer.mounts
-            available_mounts = local.formatted_available_mounts
-          })
-        }],
 
         var.health_check_enabled ? [{
           path = "/etc/systemd/system/healthcheck.service"

@@ -1,3 +1,29 @@
+variable worker {
+  type = object({
+    command = optional(list(string))
+    env = optional(map(string))
+    image = string
+    replicas = number
+    user = optional(string)
+    expose = optional(list(object({
+      port = number
+      protocol = optional(string)
+      container_port = optional(number)
+      host = optional(string)
+    })))
+    mounts = optional(list(object({
+      name = string
+      src = string
+      target = string
+      type = optional(string)
+      readonly = optional(bool)
+    })))
+    init_commands = optional(list(object({
+      command = list(string)
+    })))
+  })
+}
+
 locals {
   worker = {
     // TODO add restart policy, restart interval
@@ -37,14 +63,14 @@ locals {
   // Build worker unit file.
   worker_unit_file = "${var.systemd_name}@.service"
 
-  worker_unit_file_contents = templatefile("${path.module}/parts/service.tpl", {
+  worker_unit_file_contents = templatefile("${path.module}/templates/systemd-service.tpl", {
     type = "exec"
     cloudsql_required = local.requires_cloudsql
     cloudsql_wait = local.wait_for_cloudsql
     arg_file = local.worker_arg_file
     pre_start = []
     stop = ""
-    start = templatefile("${path.module}/parts/run.tpl", {
+    start = templatefile("${path.module}/templates/docker-run.tpl", {
       name = "${var.systemd_name}-%i"
       env_file = var.systemd_name
       user = local.worker.user

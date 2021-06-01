@@ -203,19 +203,7 @@ variable tags {
   description = "Network tags to apply to instances in the pool."
 }
 
-variable timers {
-  type = list(
-    object({
-      name = string
-      schedule = string
-      command = optional(list(string))
-      user = optional(string)
-      mounts = optional(set(string))
-    })
-  )
-  default = []
-  description = "Scheduled timers to execute on instances."
-}
+
 
 variable timezone {
   type = string
@@ -227,30 +215,4 @@ variable wait_for_instances {
   type = bool
   default = false
   description = "Wait for instances to stabilise starting after updating the pool's instance group."
-}
-
-variable worker {
-  type = object({
-    command = optional(list(string))
-    env = optional(map(string))
-    image = string
-    replicas = number
-    user = optional(string)
-    expose = optional(list(object({
-      port = number
-      protocol = optional(string)
-      container_port = optional(number)
-      host = optional(string)
-    })))
-    mounts = optional(list(object({
-      name = string
-      src = string
-      target = string
-      type = optional(string)
-      readonly = optional(bool)
-    })))
-    init_commands = optional(list(object({
-      command = list(string)
-    })))
-  })
 }

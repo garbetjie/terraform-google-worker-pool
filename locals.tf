@@ -14,18 +14,6 @@ locals {
   // The unique label used to target instances in firewall rules.
   tag = "${var.name}-${random_id.instance_tag_suffix.hex}"
 
-  // Format complete timer objects.
-  timers = [
-    for timer in var.timers: {
-      name = timer.name
-      schedule = timer.schedule
-      command = lookup(timer, "command", [])
-      user = lookup(timer, "user", null)
-      mounts = []
-//      mounts = lookup(timer, "mounts", null) == null ? local.mounts : timer.mounts
-    }
-  ]
-
   // Determine the actual log options to use.
   log_opts = var.log_opts != null ? var.log_opts : lookup(local.default_log_opts, var.log_driver, {})
 
@@ -42,43 +30,6 @@ locals {
       compress = "true"
     }
   }
-
-  // Format the exposed ports.
-  expose_ports = [
-    for expose in var.expose_ports: {
-      port = expose.port
-      container_port = lookup(expose, "port", null) == null ? expose.port : expose.container_port
-      protocol = lookup(expose, "protocol", null) == null ? "tcp" : expose.protocol
-      host = lookup(expose, "host", null) == null ? "0.0.0.0" : expose.host
-    }
-  ]
-
-  // Format the values in available mounts.
-  available_mounts = {
-    for mount in var.available_mounts:
-      mount.name => {
-        name = mount.name
-        type = lookup(mount, "type", null) == null ? "volume" : mount.type
-        src = mount.src
-        target = mount.target
-        readonly = lookup(mount, "readonly", null) == null ? false : mount.readonly
-      }
-  }
-
-  // Provide each available mount specified as a string that can be used in templates. Simplifies the string creation
-  // in templates.
-  formatted_available_mounts = {
-    for mount in local.available_mounts:
-      mount.name => format(
-        "type=%s,src=%s,dst=%s%s",
-        mount.type,
-        mount.src,
-        mount.target,
-        mount.readonly ? ",readonly" : ""
-      )
-  }
-
-  base_path = "/etc/runtime"
 
   cloudsql_mounts = local.requires_cloudsql ? [templatefile("${path.module}/parts/mount.tpl", {
     mount = {
