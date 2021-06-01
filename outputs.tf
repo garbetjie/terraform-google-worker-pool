@@ -102,14 +102,6 @@ output labels {
   value = var.labels
 }
 
-output log_driver {
-  value = var.log_driver
-}
-
-output log_opts {
-  value = var.log_opts
-}
-
 output machine_type {
   value = var.machine_type
 }

@@ -8,18 +8,6 @@ variable location {
   description = "Zone or region in which to create the pool."
 }
 
-variable available_mounts {
-  type = list(object({
-    name = string
-    type = optional(string)
-    src = string
-    target = string
-    readonly = optional(bool)
-  }))
-  default = []
-  description = "Volumes to mount into the worker containers."
-}
-
 variable disk_size {
   type = number
   default = 25
@@ -47,18 +35,6 @@ variable labels {
   type = map(string)
   default = {}
   description = "Labels to apply to all instances in the pool."
-}
-
-variable log_driver {
-  type = string
-  default = "local"
-  description = "Default log driver to be used in the Docker daemon."
-}
-
-variable log_opts {
-  type = map(string)
-  default = null
-  description = "Options for configured log driver."
 }
 
 variable machine_type {
