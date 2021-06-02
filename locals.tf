@@ -6,5 +6,5 @@ locals {
   tag = "${var.name}-${random_id.instance_tag_suffix.hex}"
 
   // Build docker config.
-  docker_config_contents = jsonencode({ log-driver = local.logging_driver, log-opts = local.logging_options })
+  docker_config_contents = jsonencode({ log-driver = local.logging.driver, log-opts = local.logging.options })
 }

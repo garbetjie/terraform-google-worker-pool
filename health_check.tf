@@ -31,7 +31,7 @@ locals {
 
   script_files_health_check = local.health_check_enabled ? {
     "healthcheck.sh" = templatefile("${path.module}/templates/script-healthcheck.sh.tpl", {
-      expected_count = sum([local.worker_replicas, local.cloudsql_required ? 1 : 0])
+      expected_count = sum([local.workers.replicas, local.cloudsql_required ? 1 : 0])
     })
   } : {}
 }

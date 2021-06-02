@@ -1,160 +1,151 @@
-variable command {
-  type = list(string)
-  default = []
-}
+//variable command {
+//  type = list(string)
+//  default = []
+//}
+//
+//variable env {
+//  type = map(string)
+//  default = {}
+//}
+//
+//variable image {
+//  type = string
+//}
+//
+//variable workers_per_instance {
+//  type = number
+//  default = 3
+//}
+//
+//variable user {
+//  type = string
+//  default = null
+//}
+//
+//variable expose_ports {
+//  type = list(object({
+//    port = number
+//    protocol = optional(string)
+//    container_port = optional(number)
+//    host = optional(string)
+//  }))
+//  default = []
+//}
+//
+//variable mounts {
+//  type = list(object({
+//    src = string
+//    target = string
+//    type = optional(string)
+//    readonly = optional(bool)
+//  }))
+//  default = []
+//}
+//
+//variable init_commands {
+//  type = list(object({ command = list(string) }))
+//  default = []
+//}
+//
+//variable worker_name {
+//  type = string
+//  default = "worker"
+//}
 
-variable env {
-  type = map(string)
-  default = {}
-}
-
-variable image {
-  type = string
-}
-
-variable workers_per_instance {
-  type = number
-  default = 3
-}
-
-variable user {
-  type = string
-  default = null
-}
-
-variable expose_ports {
-  type = list(object({
-    port = number
-    protocol = optional(string)
-    container_port = optional(number)
-    host = optional(string)
-  }))
-  default = []
-}
-
-variable mounts {
-  type = list(object({
-    src = string
-    target = string
-    type = optional(string)
-    readonly = optional(bool)
-  }))
-  default = []
-}
-
-variable init_commands {
-  type = list(object({ command = list(string) }))
-  default = []
-}
-
-variable worker_name {
-  type = string
-  default = "worker"
+variable workers {
+  type = object({
+    image = string
+    replicas = number
+    expose = optional(list(object({
+      port = number
+      container_port = optional(number)
+      host = optional(string)
+      protocol = optional(string)
+    })))
+    name = optional(string)
+    args = optional(list(string))
+    env = optional(map(string))
+    user = optional(string)
+    pre = optional(list(object({
+      args = optional(list(string))
+      image = optional(string)
+      user = optional(string)
+    })))
+    mounts = optional(list(object({
+      src = string
+      target = string
+      type = optional(string)
+      readonly = optional(bool)
+    })))
+  })
 }
 
 locals {
-  worker_name = var.worker_name
-  worker_command = var.command
-  worker_env = var.env
-  worker_image = var.image
-  worker_replicas = var.workers_per_instance
-  worker_user = var.user
-  worker_expose_ports = [for e in var.expose_ports: templatefile("${path.module}/templates/expose.json.tpl", e)]
-  worker_mounts = [for m in var.mounts: jsondecode(templatefile("${path.module}/templates/mount.json.tpl", m))]
-
-  worker_init_commands = var.init_commands
-
-  // Build up all worker commands and init commands into a single massive map.
-  worker_args = {
-    for pair in concat(
-      flatten([
-        for init_command_index, init_command in local.worker_init_commands: [
-          for index, value in init_command.command: { key = "ARG_INIT_${init_command_index + 1}_${index}", value = value }
-        ]
-      ]),
-      [for index, value in local.worker_command: { key = "ARG_MAIN_${index}", value = value }],
-    ): (pair.key) => pair.value
+  workers = {
+    image = var.workers.image
+    name = var.workers.name == null ? "worker" : var.workers.name
+    args = var.workers.args == null ? [] : var.workers.args
+    env = var.workers.env == null ? {} : var.workers.env
+    user = var.workers.user
+    replicas = var.workers.replicas
+    expose = var.workers.expose == null ? [] : [for e in var.workers.expose: jsondecode(templatefile("${path.module}/templates/expose.json.tpl", e))]
+    mounts = var.workers.mounts == null ? [] : [for m in var.workers.mounts: jsondecode(templatefile("${path.module}/templates/mounts.json.tpl", m))]
+    pre = var.workers.pre == null ? [] : [for init in var.workers.pre: {
+      args = init.args == null ? [] : init.args
+      image = init.image == null ? var.workers.image : init.image
+      user = init.user
+    }]
   }
-
 
   // Build worker arg file.
   arg_files_workers = {
-    (local.worker_name) = join("\n", concat(
-      [for key, value in local.worker_args: "${key}=${value}"],
+    (local.workers.name) = join("\n", concat(
+      [for arg_index, arg in local.workers.args: "ARG_MAIN_${arg_index}=${arg}"],
+      flatten([for init_index, init in local.workers.pre: [
+        for arg_index, arg in init.args: "ARG_INIT_${init_index + 1}_${arg_index}=${arg}"
+      ]]),
       [""]
     ))
   }
 
   // Build worker env file.
   env_files_workers = {
-    (local.worker_name) = join("\n", concat(
-      [for k, v in var.env: "${k}=${v}"],
+    (local.workers.name) = join("\n", concat(
+      [for k, v in local.workers.env: "${k}=${v}"],
       [""]
     ))
   }
 
   // Build worker unit file.
   unit_files_workers = {
-    "${local.worker_name}@.service" = templatefile("${path.module}/templates/systemd-service.tpl", {
+    "${local.workers.name}@.service" = templatefile("${path.module}/templates/systemd-service.tpl", {
       type = "exec"
       requires = local.cloudsql_systemd_requires
       arg_file = keys(local.arg_files_workers)[0]
-      exec_start_pre = concat(local.cloudsql_system_exec_start_pre, [
-        for init_command_index, init_command in local.worker_init_commands:
+      exec_start_pre = concat(local.cloudsql_systemd_exec_start_pre, [
+        for init_index, init in local.workers.pre:
           templatefile("${path.module}/templates/docker-run.tpl", {
-            name = "${local.worker_name}-%i-init${init_command_index + 1}"
+            name = "${local.workers.name}-%i-init${init_index + 1}"
             env_file = keys(local.env_files_workers)[0]
-            user = var.user
+            user = init.user
             labels = { part-of = "worker-init" }
-            mounts = concat(local.cloudsql_mounts, local.worker_mounts)
+            mounts = concat(local.cloudsql_mounts, local.workers.mounts)
             expose = []
-            image = local.worker_image
-            command = [for index, cmd in init_command.command: "ARG_INIT_${init_command_index + 1}_${index}"]
+            image = init.image
+            args = [for index, cmd in init.args: "ARG_INIT_${init_index + 1}_${index}"]
           })
       ])
-      exec_stop = templatefile("${path.module}/templates/docker-stop.tpl", { name = "${local.worker_name}-%i" })
+      exec_stop = templatefile("${path.module}/templates/docker-stop.tpl", { name = "${local.workers.name}-%i" })
       exec_start = templatefile("${path.module}/templates/docker-run.tpl", {
-        name = "${local.worker_name}-%i"
+        name = "${local.workers.name}-%i"
         env_file = keys(local.env_files_workers)[0]
-        user = local.worker_user
+        user = local.workers.user
         labels = { part-of = "worker" }
-        mounts = concat(local.cloudsql_mounts, local.worker_mounts)
-        expose = local.worker_expose_ports
-        image = local.worker_image
-        command = [for index, cmd in local.worker_command: "ARG_MAIN_${index}"]
+        mounts = concat(local.cloudsql_mounts, local.workers.mounts)
+        expose = local.workers.expose
+        image = local.workers.image
+        args = [for index, cmd in local.workers.args: "ARG_MAIN_${index}"]
       })
     })
   }
-}
-
-output worker_name {
-  value = local.worker_name
-}
-
-output env {
-  value = local.worker_env
-}
-
-output image {
-  value = local.worker_image
-}
-
-output workers_per_instance {
-  value = local.worker_replicas
-}
-
-output user {
-  value = local.worker_user
-}
-
-output expose_ports {
-  value = local.worker_expose_ports
-}
-
-output mounts {
-  value = local.worker_mounts
-}
-
-output init_commands {
-  value = local.worker_init_commands
 }

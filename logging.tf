@@ -1,6 +1,6 @@
 variable logging {
   type = object({
-    driver = optional(string)
+    driver = string
     options = optional(map(string))
   })
 
@@ -10,8 +10,10 @@ variable logging {
 }
 
 locals {
-  logging_driver = var.logging.driver
-  logging_options = var.logging.options != null ? var.logging.options : lookup(local.logging_defaults, var.logging.driver, {})
+  logging = {
+    driver = var.logging.driver
+    options = var.logging.options == null ? lookup(local.logging_defaults, var.logging.driver, {}) : var.logging.options
+  }
 
   logging_defaults = {
     json-file = {
@@ -29,7 +31,7 @@ locals {
 
 output logging {
   value = {
-    driver = local.logging_driver
-    options = local.logging_options
+    driver = local.logging.driver
+    options = local.logging.options
   }
 }

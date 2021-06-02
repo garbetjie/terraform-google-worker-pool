@@ -44,7 +44,7 @@ locals {
   cloudsql_required = length(local.cloudsql_connections) > 0
   cloudsql_wait = local.cloudsql_required && local.cloudsql_wait_duration >= 0
 
-  cloudsql_system_exec_start_pre = local.cloudsql_wait ? ["/bin/sh /etc/runtime/scripts/wait-for-cloudsql.sh"] : []
+  cloudsql_systemd_exec_start_pre = local.cloudsql_wait ? ["/bin/sh /etc/runtime/scripts/wait-for-cloudsql.sh"] : []
   cloudsql_systemd_requires = local.cloudsql_required ? ["cloudsql.service"] : []
 
   cloudsql_mounts = local.cloudsql_required ? [

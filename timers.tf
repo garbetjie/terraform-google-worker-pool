@@ -2,13 +2,16 @@ variable timers {
   type = list(
     object({
       schedule = string
-      command = optional(list(string))
-      name = optional(string)
+      args = optional(list(string))
       image = optional(string)
       user = optional(string)
       env = optional(map(string))
+      init = optional(list(object({
+        args = optional(list(string))
+        image = optional(string)
+        user = optional(string)
+      })))
       mounts = optional(list(object({
-        name = string
         src = string
         target = string
         type = optional(string)
@@ -21,60 +24,64 @@ variable timers {
 }
 
 locals {
-  // Build up correct defaults.
-  timer_names = [for i, t in var.timers: (t.name == null || t.name == "" ? "timer-${format("%02d", i + 1)}" : t.name)]
-  timer_commands = [for t in var.timers: (t.command == null ? [] : t.command)]
-  timer_schedules = [for t in var.timers: t.schedule]
-  timer_images = [for t in var.timers: (t.image == null ? local.worker_image : t.image)]
-  timer_users = [for t in var.timers: t.user]
-  timer_envs = [for t in var.timers: (t.env == null ? local.worker_env : t.env)]
-  timer_mounts = [for t in var.timers:
-    t.mounts == null
-      ? local.worker_mounts
-      : [for m in t.mounts: jsondecode(templatefile("${path.module}/templates/mount.json.tpl", m))]
+  timers = [
+    for index, timer in var.timers: {
+      name = "timer-${format("%02d", index + 1)}"
+      schedule = timer.schedule
+      args = timer.args == null ? [] : timer.args
+      user = timer.user
+      image = timer.image == null ? local.workers.image : timer.image
+      env = timer.env == null ? local.workers.env : timer.env
+      mounts = timer.mounts == null ? local.workers.mounts : [for m in timer.mounts: jsondecode(templatefile("${path.module}/templates/mounts.json.tpl", m))]
+      init = timer.init == null ? [] : [for init in timer.init: {
+        args = init.args == null ? [] : init.args
+        image = coalesce(init.image, timer.image, local.workers.image)
+        user = init.user
+      }]
+    }
   ]
 
   // Build up timer arg files.
   arg_files_timers = {
-    for name_index, name in local.timer_names:
-      name => join("\n", concat(
-        [for cmd_index, cmd in local.timer_commands[name_index]: format("ARG%d=%s", cmd_index, cmd)],
-        [""]
+    for timer in local.timers:
+      (timer.name) => join("\n", concat(
+        [for arg_index, arg in timer.args: "ARG_MAIN_${arg_index}=${arg}"],
+        flatten([for init_index, init in timer.init: [
+            for arg_index, arg in init.args: "ARG_INIT_${init_index + 1}_${arg_index}=${arg}"
+        ]]),
+        [""],
       ))
   }
 
   // Build up timer env files.
   env_files_timers = {
-    for index, name in local.timer_names:
-      name => join("\n", concat(
-        [for k, v in local.timer_envs[index]: "${k}=${v}"],
+    for timer in local.timers:
+      (timer.name) => join("\n", concat(
+        [for k, v in timer.env: "${k}=${v}"],
         [""]
       ))
   }
 
   unit_files_timers = merge(
-    {for index, name in local.timer_names:
-      "${name}.timer" => templatefile("${path.module}/templates/systemd-timer.tpl", {
-        name = name
-        schedule = local.timer_schedules[index]
-      })
+    {for timer in local.timers:
+      "${timer.name}.timer" => templatefile("${path.module}/templates/systemd-timer.tpl", timer)
     },
-    {for index, name in local.timer_names:
-      "${name}.service" => templatefile("${path.module}/templates/systemd-service.tpl", {
+    {for timer in local.timers:
+      "${timer.name}.service" => templatefile("${path.module}/templates/systemd-service.tpl", {
         type = "exec"
-        arg_file = name
+        arg_file = timer.name
         requires = local.cloudsql_systemd_requires
-        exec_start_pre = local.cloudsql_system_exec_start_pre
-        exec_stop = templatefile("${path.module}/templates/docker-stop.tpl", { name = name })
+        exec_start_pre = local.cloudsql_systemd_exec_start_pre
+        exec_stop = templatefile("${path.module}/templates/docker-stop.tpl", { name = timer.name })
         exec_start = templatefile("${path.module}/templates/docker-run.tpl", {
-          name = name
-          env_file = name
-          user = local.timer_users[index]
+          name = timer.name
+          env_file = timer.name
+          user = timer.user
           labels = { part-of = "timer" }
-          mounts = concat(local.cloudsql_mounts, local.timer_mounts[index])
+          mounts = concat(local.cloudsql_mounts, timer.mounts)
           expose = []
-          image = local.timer_images[index]
-          command = local.timer_commands[index]
+          image = timer.image
+          args = [for index, arg in timer.args: "ARG_MAIN_${index}"]
         })
       })
     }

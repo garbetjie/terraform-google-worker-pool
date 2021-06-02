@@ -7,4 +7,4 @@
 %{~ endif ~}
 %{~ if length(expose) > 0 } -p ${join(" -p ", [for e in expose: format("%s:%s:%s/%s", e.host, e.port, e.container_port, e.protocol)])}
 %{~ endif ~}
- ${image} ${join(" ", [for cmd in command: "$${${cmd}}"])}
+ ${image} ${join(" ", [for arg in args: "$${${arg}}"])}

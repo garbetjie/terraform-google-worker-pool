@@ -56,8 +56,8 @@ resource google_compute_instance_template template {
         ["systemctl daemon-reload", "systemctl restart docker"],
         ["HOME=/etc/runtime docker-credential-gcr configure-docker"],
         var.runcmd,
-        local.worker_replicas > 0 ? ["systemctl start $(printf '${local.worker_name}@%02d ' $(seq 1 ${local.worker_replicas}))"] : [],
-        length(local.timer_names) > 0 ? ["systemctl start ${join(" ", formatlist("%s.timer", distinct(local.timer_names)))}"]: [],
+        local.workers.replicas > 0 ? ["systemctl start $(printf '${local.workers.name}@%02d ' $(seq 1 ${local.workers.replicas}))"] : [],
+        length(local.timers) > 0 ? ["systemctl start ${join(" ", formatlist("%s.timer", distinct(local.timers.*.name)))}"]: [],
         local.health_check_enabled ? ["systemctl start ${keys(local.unit_files_health_check)[0]}"] : [],
       )
     })])
