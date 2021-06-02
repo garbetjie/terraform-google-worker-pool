@@ -6,11 +6,11 @@ variable timers {
       image = optional(string)
       user = optional(string)
       env = optional(map(string))
-      init = optional(list(object({
-        args = optional(list(string))
-        image = optional(string)
-        user = optional(string)
-      })))
+//      pre = optional(list(object({
+//        args = optional(list(string))
+//        image = optional(string)
+//        user = optional(string)
+//      })))
       mounts = optional(list(object({
         src = string
         target = string
@@ -33,11 +33,12 @@ locals {
       image = timer.image == null ? local.workers.image : timer.image
       env = timer.env == null ? local.workers.env : timer.env
       mounts = timer.mounts == null ? local.workers.mounts : [for m in timer.mounts: jsondecode(templatefile("${path.module}/templates/mounts.json.tpl", m))]
-      init = timer.init == null ? [] : [for init in timer.init: {
-        args = init.args == null ? [] : init.args
-        image = coalesce(init.image, timer.image, local.workers.image)
-        user = init.user
-      }]
+      pre = []
+//      pre = timer.init == null ? [] : [for init in timer.init: {
+//        args = init.args == null ? [] : init.args
+//        image = coalesce(init.image, timer.image, local.workers.image)
+//        user = init.user
+//      }]
     }
   ]
 
@@ -86,4 +87,16 @@ locals {
       })
     }
   )
+}
+
+output timers {
+  value = [for timer in local.timers: {
+    schedule = timer.schedule
+    args = timer.args
+    image = timer.image
+    user = timer.user
+    env = timer.env
+//    pre = timer.pre
+    mounts = timer.mounts
+  }]
 }

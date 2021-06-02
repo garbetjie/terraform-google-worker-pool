@@ -86,10 +86,6 @@ output tags {
   value = var.tags
 }
 
-output timers {
-  value = var.timers
-}
-
 output timezone {
   value = var.timezone
 }

@@ -1,57 +1,3 @@
-//variable command {
-//  type = list(string)
-//  default = []
-//}
-//
-//variable env {
-//  type = map(string)
-//  default = {}
-//}
-//
-//variable image {
-//  type = string
-//}
-//
-//variable workers_per_instance {
-//  type = number
-//  default = 3
-//}
-//
-//variable user {
-//  type = string
-//  default = null
-//}
-//
-//variable expose_ports {
-//  type = list(object({
-//    port = number
-//    protocol = optional(string)
-//    container_port = optional(number)
-//    host = optional(string)
-//  }))
-//  default = []
-//}
-//
-//variable mounts {
-//  type = list(object({
-//    src = string
-//    target = string
-//    type = optional(string)
-//    readonly = optional(bool)
-//  }))
-//  default = []
-//}
-//
-//variable init_commands {
-//  type = list(object({ command = list(string) }))
-//  default = []
-//}
-//
-//variable worker_name {
-//  type = string
-//  default = "worker"
-//}
-
 variable workers {
   type = object({
     image = string
@@ -147,5 +93,19 @@ locals {
         args = [for index, cmd in local.workers.args: "ARG_MAIN_${index}"]
       })
     })
+  }
+}
+
+output workers {
+  value = {
+    image = local.workers.image
+    replicas = local.workers.replicas
+    expose = local.workers.expose
+    name = local.workers.name
+    args = local.workers.args
+    env = local.workers.env
+    user = local.workers.user
+    pre = local.workers.pre
+    mounts = local.workers.mounts
   }
 }
