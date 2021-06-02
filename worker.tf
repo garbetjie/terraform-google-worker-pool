@@ -67,12 +67,12 @@ locals {
   // Build up all worker commands and init commands into a single massive map.
   worker_args = {
     for pair in concat(
-      [for index, value in local.worker_command: { key = "ARG_MAIN_${index}", value = value }],
       flatten([
         for init_command_index, init_command in local.worker_init_commands: [
-          for index, value in init_command.command: { key = "ARG_INIT_${init_command_index}_${index}", value = value }
+          for index, value in init_command.command: { key = "ARG_INIT_${init_command_index + 1}_${index}", value = value }
         ]
-      ])
+      ]),
+      [for index, value in local.worker_command: { key = "ARG_MAIN_${index}", value = value }],
     ): (pair.key) => pair.value
   }
 
@@ -102,14 +102,14 @@ locals {
       exec_start_pre = concat(local.cloudsql_system_exec_start_pre, [
         for init_command_index, init_command in local.worker_init_commands:
           templatefile("${path.module}/templates/docker-run.tpl", {
-            name = "${local.worker_name}-%i-init-${init_command_index}"
+            name = "${local.worker_name}-%i-init${init_command_index + 1}"
             env_file = keys(local.env_files_workers)[0]
             user = var.user
             labels = { part-of = "worker-init" }
             mounts = concat(local.cloudsql_mounts, local.worker_mounts)
             expose = []
             image = local.worker_image
-            command = [for index, cmd in init_command.command: "ARG_INIT_${init_command_index}_${index}"]
+            command = [for index, cmd in init_command.command: "ARG_INIT_${init_command_index + 1}_${index}"]
           })
       ])
       exec_stop = templatefile("${path.module}/templates/docker-stop.tpl", { name = "${local.worker_name}-%i" })
