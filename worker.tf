@@ -1,49 +1,91 @@
-variable workers {
-  type = object({
-    name = optional(string)
-    command = optional(list(string))
-    env = optional(map(string))
-    image = string
-    replicas = number
-    user = optional(string)
-    expose = optional(list(object({
-      port = number
-      protocol = optional(string)
-      container_port = optional(number)
-      host = optional(string)
-    })))
-    mounts = optional(list(object({
-      name = string
-      src = string
-      target = string
-      type = optional(string)
-      readonly = optional(bool)
-    })))
-    init_commands = optional(list(object({
-      command = list(string)
-    })))
-  })
+variable command {
+  type = list(string)
+  default = []
+}
+
+variable env {
+  type = map(string)
+  default = {}
+}
+
+variable image {
+  type = string
+}
+
+variable workers_per_instance {
+  type = number
+  default = 3
+}
+
+variable user {
+  type = string
+  default = null
+}
+
+variable expose_ports {
+  type = list(object({
+    port = number
+    protocol = optional(string)
+    container_port = optional(number)
+    host = optional(string)
+  }))
+  default = []
+}
+
+variable mounts {
+  type = list(object({
+    name = string
+    src = string
+    target = string
+    type = optional(string)
+    readonly = optional(bool)
+  }))
+  default = []
+}
+
+variable init_commands {
+  type = list(object({ command = list(string) }))
+  default = []
+}
+
+variable worker_name {
+  type = string
+  default = "worker"
 }
 
 locals {
-  worker_name = var.workers.name == null ? "worker" : var.workers.name
-  worker_command = var.workers.command == null ? [] : var.workers.command
-  worker_env = var.workers.env == null ? {} : var.workers.env
-  worker_image = var.workers.image
-  worker_replicas = var.workers.replicas
-  worker_user = var.workers.user
-  worker_expose = var.workers.expose == null ? [] : [
-    for expose in var.workers.expose: templatefile("${path.module}/templates/partial-expose.tpl", { expose = expose })
+  worker_name = var.worker_name
+  worker_command = var.command
+  worker_env = var.env
+  worker_image = var.image
+  worker_replicas = var.workers_per_instance
+  worker_user = var.user
+  worker_expose_ports = [for p in var.expose_ports: {
+    port = p.port
+    protocol = lower(p.protocol == null ? "tcp" : p.protocol)
+    container_port = p.container_port == null ? p.port : p.container_port
+    host = p.host == null ? "0.0.0.0" : p.host
+  }]
+  worker_expose_ports_formatted = [
+    for expose in local.worker_expose_ports: templatefile("${path.module}/templates/partial-expose.tpl", { expose = expose })
   ]
-  worker_mounts = var.workers.mounts == null ? [] : [
-    for mount in var.workers.mounts: templatefile("${path.module}/templates/partial-mount.tpl", { mount = mount })
+  worker_mounts = tolist([for m in var.mounts: {
+    name = m.name
+    src = m.src
+    target = m.target
+    type = lower(m.type == null ? "volume" : m.type)
+    readonly = m.readonly == null ? false : m.readonly
+  }])
+  worker_mounts_formatted = [
+    for mount in local.worker_mounts: templatefile("${path.module}/templates/partial-mount.tpl", { mount = mount })
   ]
-  worker_init_commands = var.workers.init_commands == null ? [] : var.workers.init_commands
+
+  worker_init_commands = var.init_commands
   
   // Build worker arg file.
   worker_arg_files = {
     (local.worker_name) = join("\n", concat(
-      [for index in range(length(local.worker_command)): format("ARG%d=%s", index, local.worker_command[index])],
+      [for index in range(length(var.command)): format("ARG%d=%s", index, var.command[index])],
       [""]
     ))
   }
@@ -51,7 +93,7 @@ locals {
   // Build worker env file.
   worker_env_files = {
     (local.worker_name) = join("\n", concat(
-      [for k, v in local.worker_env: "${k}=${v}"],
+      [for k, v in var.env: "${k}=${v}"],
       [""]
     ))
   }
@@ -62,15 +104,27 @@ locals {
       type = "exec"
       requires = local.cloudsql_provided_requires
       arg_file = keys(local.worker_arg_files)[0]
-      exec_start_pre = local.cloudsql_provided_exec_start_pre
+      exec_start_pre = concat(local.cloudsql_provided_exec_start_pre, [
+        for index, command in local.worker_init_commands:
+          templatefile("${path.module}/templates/docker-run.tpl", {
+            name = "${local.worker_name}-%i-init-${format("%02d", index + 1)}"
+            env_file = keys(local.worker_env_files)[0]
+            user = var.user
+            labels = { part-of = "worker-init" }
+            mounts = concat(local.cloudsql_provided_mounts, local.worker_mounts_formatted)
+            expose = []
+            image = local.worker_image
+            command = command
+          })
+      ])
       exec_stop = templatefile("${path.module}/templates/docker-stop.tpl", { name = "${local.worker_name}-%i" })
       exec_start = templatefile("${path.module}/templates/docker-run.tpl", {
         name = "${local.worker_name}-%i"
         env_file = keys(local.worker_env_files)[0]
         user = local.worker_user
         labels = { part-of = "worker" }
-        mounts = concat(local.cloudsql_provided_mounts, local.worker_mounts)
-        expose = local.worker_expose
+        mounts = concat(local.cloudsql_provided_mounts, local.worker_mounts_formatted)
+        expose = local.worker_expose_ports_formatted
         image = local.worker_image
         command = local.worker_command
       })
@@ -78,16 +132,34 @@ locals {
   }
 }
 
-output workers {
-  value = {
-    name = local.worker_name
-    command = local.worker_command
-    env = local.worker_env
-    image = local.worker_image
-    replicas = local.worker_replicas
-    user = local.worker_user
-    expose = local.worker_expose
-    mounts = local.worker_mounts
-    init_commands = local.worker_init_commands
-  }
+output worker_name {
+  value = local.worker_name
+}
+
+output env {
+  value = local.worker_env
+}
+
+output image {
+  value = local.worker_image
+}
+
+output workers_per_instance {
+  value = local.worker_replicas
+}
+
+output user {
+  value = local.worker_user
+}
+
+output expose_ports {
+  value = local.worker_expose_ports
+}
+
+output mounts {
+  value = local.worker_mounts
+}
+
+output init_commands {
+  value = local.worker_init_commands
 }

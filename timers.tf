@@ -28,11 +28,9 @@ locals {
   timer_images = [for t in var.timers: (t.image == null ? local.worker_image : t.image)]
   timer_users = [for t in var.timers: t.user]
   timer_envs = [for t in var.timers: (t.env == null ? local.worker_env : t.env)]
-  timer_mounts = [for t in var.timers: (
-    t.mounts == null ? local.worker_mounts : [
-      for m in t.mounts: templatefile("${path.module}/parts/mount.tpl", { mount = m })
-    ]
-  )]
+  timer_mounts = [for t in var.timers:
+    [for m in (t.mounts == null ? local.worker_mounts : t.mounts): templatefile("${path.module}/templates/partial-mount.tpl", { mount = m })]
+  ]
 
   // Build up timer arg files.
   timer_arg_files = {
