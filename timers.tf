@@ -34,7 +34,7 @@ locals {
       env = timer.env == null ? local.workers.env : timer.env
       mounts = timer.mounts == null ? local.workers.mounts : [for m in timer.mounts: jsondecode(templatefile("${path.module}/templates/mounts.json.tpl", m))]
       pre = []
-//      pre = timer.init == null ? [] : [for init in timer.init: {
+//      pre = timer.pre == null ? [] : [for init in timer.pre: {
 //        args = init.args == null ? [] : init.args
 //        image = coalesce(init.image, timer.image, local.workers.image)
 //        user = init.user
@@ -47,7 +47,7 @@ locals {
     for timer in local.timers:
       (timer.name) => join("\n", concat(
         [for arg_index, arg in timer.args: "ARG_MAIN_${arg_index}=${arg}"],
-        flatten([for init_index, init in timer.init: [
+        flatten([for init_index, init in timer.pre: [
             for arg_index, arg in init.args: "ARG_INIT_${init_index + 1}_${arg_index}=${arg}"
         ]]),
         [""],
