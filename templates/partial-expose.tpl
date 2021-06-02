@@ -1,1 +1,0 @@
-${expose.host == null ? "0.0.0.0" : expose.host}:${expose.port}:${expose.container_port == null ? expose.port : expose.container_port}/${expose.protocol == null ? "tcp" : lower(expose.protocol)}

@@ -44,13 +44,22 @@ locals {
   cloudsql_required = length(local.cloudsql_connections) > 0
   cloudsql_wait = local.cloudsql_required && local.cloudsql_wait_duration >= 0
 
-  cloudsql_provided_exec_start_pre = local.cloudsql_wait ? ["/bin/sh /etc/runtime/scripts/wait-for-cloudsql.sh"] : []
-  cloudsql_provided_requires = local.cloudsql_required ? ["cloudsql.service"] : []
-  cloudsql_provided_mounts = !local.cloudsql_required ? [] : [templatefile("${path.module}/templates/partial-mount.tpl", {
-    mount = { type = "volume", src = local.cloudsql_mount_name, target = local.cloudsql_mount_path, readonly = true }
-  })]
+  cloudsql_system_exec_start_pre = local.cloudsql_wait ? ["/bin/sh /etc/runtime/scripts/wait-for-cloudsql.sh"] : []
+  cloudsql_systemd_requires = local.cloudsql_required ? ["cloudsql.service"] : []
 
-  cloudsql_unit_files = local.cloudsql_required ? {
+  cloudsql_mounts = local.cloudsql_required ? [
+    jsondecode(
+      templatefile("${path.module}/templates/mount.json.tpl", {
+        type = "volume",
+        src = local.cloudsql_mount_name,
+        target = local.cloudsql_mount_path,
+        readonly = true
+      })
+    )
+  ] : []
+
+  // Unit files to be included in the cloud-init config.
+  unit_files_cloudsql = local.cloudsql_required ? {
     "cloudsql.service" = templatefile("${path.module}/templates/systemd-cloudsql.tpl", {
       connections = local.cloudsql_connections
       mount_name = local.cloudsql_mount_name
@@ -59,7 +68,8 @@ locals {
     })
   } : {}
 
-  cloudsql_script_files = local.cloudsql_wait ? {
+  // Script files to be included in the cloud-init config.
+  script_files_cloudsql = local.cloudsql_wait ? {
     "wait-for-cloudsql.sh" = templatefile("${path.module}/templates/script-wait-for-cloudsql.sh.tpl", {
       wait_duration = local.cloudsql_wait_duration
     })

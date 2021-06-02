@@ -31,22 +31,22 @@ resource google_compute_instance_template template {
         ],
 
         // Populate systemd unit files.
-        [for file, content in merge(local.worker_unit_files, local.timer_unit_files, local.cloudsql_unit_files, local.health_check_unit_files):
+        [for file, content in merge(local.unit_files_workers, local.unit_files_timers, local.unit_files_cloudsql, local.unit_files_health_check):
           { path = "/etc/systemd/system/${file}", permissions = "0644", content = content }
         ],
 
         // Populate arg files.
-        [for file, content in merge(local.worker_arg_files, local.timer_arg_files):
+        [for file, content in merge(local.arg_files_workers, local.arg_files_timers):
           { path = "/etc/runtime/args/${file}", permissions = "0644", content = content }
         ],
 
         // Populate env files.
-        [for file, content in merge(local.worker_env_files, local.timer_env_files):
+        [for file, content in merge(local.env_files_workers, local.env_files_timers):
           { path = "/etc/runtime/envs/${file}", permissions = "0644", content = content }
         ],
 
         // Populate script files.
-        [for file, content in merge(local.cloudsql_script_files, local.health_check_script_files):
+        [for file, content in merge(local.script_files_cloudsql, local.script_files_health_check):
           { path = "/etc/runtime/scripts/${file}", permissions = "0644", content = content }
         ],
       ),
@@ -58,7 +58,7 @@ resource google_compute_instance_template template {
         var.runcmd,
         local.worker_replicas > 0 ? ["systemctl start $(printf '${local.worker_name}@%02d ' $(seq 1 ${local.worker_replicas}))"] : [],
         length(local.timer_names) > 0 ? ["systemctl start ${join(" ", formatlist("%s.timer", distinct(local.timer_names)))}"]: [],
-        local.health_check_enabled ? ["systemctl start ${keys(local.health_check_unit_files)[0]}"] : [],
+        local.health_check_enabled ? ["systemctl start ${keys(local.unit_files_health_check)[0]}"] : [],
       )
     })])
   })

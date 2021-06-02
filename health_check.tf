@@ -22,18 +22,18 @@ locals {
   health_check_unhealthy_threshold = var.health_check.unhealthy_threshold == null ? 3 : var.health_check.unhealthy_threshold
   health_check_initial_delay = var.health_check.initial_delay == null ? 60 : var.health_check.initial_delay
 
-  health_check_unit_files = ! local.health_check_enabled ? {} : {
+  unit_files_health_check = local.health_check_enabled ? {
     "healthcheck.service" = templatefile("${path.module}/templates/systemd-healthcheck.tpl", {
       container_name = "healthcheck-${random_id.health_check_container_suffix.hex}",
       health_check_port = local.health_check_port
     })
-  }
+  } : {}
 
-  health_check_script_files = ! local.health_check_enabled ? {} : {
+  script_files_health_check = local.health_check_enabled ? {
     "healthcheck.sh" = templatefile("${path.module}/templates/script-healthcheck.sh.tpl", {
       expected_count = sum([local.worker_replicas, local.cloudsql_required ? 1 : 0])
     })
-  }
+  } : {}
 }
 
 resource random_id health_check_container_suffix {

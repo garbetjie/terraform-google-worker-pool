@@ -29,11 +29,13 @@ locals {
   timer_users = [for t in var.timers: t.user]
   timer_envs = [for t in var.timers: (t.env == null ? local.worker_env : t.env)]
   timer_mounts = [for t in var.timers:
-    [for m in (t.mounts == null ? local.worker_mounts : t.mounts): templatefile("${path.module}/templates/partial-mount.tpl", { mount = m })]
+    t.mounts == null
+      ? local.worker_mounts
+      : [for m in t.mounts: jsondecode(templatefile("${path.module}/templates/mount.json.tpl", m))]
   ]
 
   // Build up timer arg files.
-  timer_arg_files = {
+  arg_files_timers = {
     for name_index, name in local.timer_names:
       name => join("\n", concat(
         [for cmd_index, cmd in local.timer_commands[name_index]: format("ARG%d=%s", cmd_index, cmd)],
@@ -42,7 +44,7 @@ locals {
   }
 
   // Build up timer env files.
-  timer_env_files = {
+  env_files_timers = {
     for index, name in local.timer_names:
       name => join("\n", concat(
         [for k, v in local.timer_envs[index]: "${k}=${v}"],
@@ -50,7 +52,7 @@ locals {
       ))
   }
 
-  timer_unit_files = merge(
+  unit_files_timers = merge(
     {for index, name in local.timer_names:
       "${name}.timer" => templatefile("${path.module}/templates/systemd-timer.tpl", {
         name = name
@@ -61,15 +63,15 @@ locals {
       "${name}.service" => templatefile("${path.module}/templates/systemd-service.tpl", {
         type = "exec"
         arg_file = name
-        requires = local.cloudsql_provided_requires
-        exec_start_pre = local.cloudsql_provided_exec_start_pre
+        requires = local.cloudsql_systemd_requires
+        exec_start_pre = local.cloudsql_system_exec_start_pre
         exec_stop = templatefile("${path.module}/templates/docker-stop.tpl", { name = name })
         exec_start = templatefile("${path.module}/templates/docker-run.tpl", {
           name = name
           env_file = name
           user = local.timer_users[index]
           labels = { part-of = "timer" }
-          mounts = concat(local.cloudsql_provided_mounts, local.timer_mounts[index])
+          mounts = concat(local.cloudsql_mounts, local.timer_mounts[index])
           expose = []
           image = local.timer_images[index]
           command = local.timer_commands[index]
