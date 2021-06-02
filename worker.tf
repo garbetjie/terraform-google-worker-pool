@@ -63,11 +63,24 @@ locals {
   worker_mounts = [for m in var.mounts: jsondecode(templatefile("${path.module}/templates/mount.json.tpl", m))]
 
   worker_init_commands = var.init_commands
-  
+
+  // Build up all worker commands and init commands into a single massive map.
+  worker_args = {
+    for pair in concat(
+      [for index, value in local.worker_command: { key = "ARG_MAIN_${index}", value = value }],
+      flatten([
+        for init_command_index, init_command in local.worker_init_commands: [
+          for index, value in init_command.command: { key = "ARG_INIT_${init_command_index}_${index}", value = value }
+        ]
+      ])
+    ): (pair.key) => pair.value
+  }
+
+
   // Build worker arg file.
   arg_files_workers = {
     (local.worker_name) = join("\n", concat(
-      [for index in range(length(var.command)): format("ARG%d=%s", index, var.command[index])],
+      [for key, value in local.worker_args: "${key}=${value}"],
       [""]
     ))
   }
@@ -87,16 +100,16 @@ locals {
       requires = local.cloudsql_systemd_requires
       arg_file = keys(local.arg_files_workers)[0]
       exec_start_pre = concat(local.cloudsql_system_exec_start_pre, [
-        for index, command in local.worker_init_commands:
+        for init_command_index, init_command in local.worker_init_commands:
           templatefile("${path.module}/templates/docker-run.tpl", {
-            name = "${local.worker_name}-%i-init-${format("%02d", index + 1)}"
+            name = "${local.worker_name}-%i-init-${init_command_index}"
             env_file = keys(local.env_files_workers)[0]
             user = var.user
             labels = { part-of = "worker-init" }
             mounts = concat(local.cloudsql_mounts, local.worker_mounts)
             expose = []
             image = local.worker_image
-            command = command
+            command = [for index, cmd in init_command.command: "ARG_INIT_${init_command_index}_${index}"]
           })
       ])
       exec_stop = templatefile("${path.module}/templates/docker-stop.tpl", { name = "${local.worker_name}-%i" })
@@ -108,7 +121,7 @@ locals {
         mounts = concat(local.cloudsql_mounts, local.worker_mounts)
         expose = local.worker_expose_ports
         image = local.worker_image
-        command = local.worker_command
+        command = [for index, cmd in local.worker_command: "ARG_MAIN_${index}"]
       })
     })
   }
