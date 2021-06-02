@@ -12,7 +12,7 @@ while true; do
     exit 1
   fi
 
-  if [ "$(find /var/lib/docker/volumes/cloudsql/_data -maxdepth 1 -mindepth 1 | wc -l)" = 1 ]; then
+  if [ "$(find /var/lib/docker/volumes/${mount_name}/_data -maxdepth 1 -mindepth 1 | wc -l)" = 1 ]; then
     break
   else
     echo "Waiting for CloudSQL sockets to be available."

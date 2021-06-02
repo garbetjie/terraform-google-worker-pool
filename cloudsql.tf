@@ -59,6 +59,7 @@ locals {
   script_files_cloudsql = local.cloudsql_wait ? {
     "wait-for-cloudsql.sh" = templatefile("${path.module}/templates/script-wait-for-cloudsql.sh.tpl", {
       wait_duration = local.cloudsql.wait_duration
+      mount_name = local.cloudsql.mount_name
     })
   } : {}
 }
