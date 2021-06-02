@@ -35,7 +35,7 @@ locals {
     user = var.workers.user
     replicas = var.workers.replicas
     expose = var.workers.expose == null ? [] : [for e in var.workers.expose: jsondecode(templatefile("${path.module}/templates/expose.json.tpl", e))]
-    mounts = var.workers.mounts == null ? [] : [for m in var.workers.mounts: jsondecode(templatefile("${path.module}/templates/mounts.json.tpl", m))]
+    mounts = var.workers.mounts == null ? [] : [for m in var.workers.mounts: jsondecode(templatefile("${path.module}/templates/mount.json.tpl", m))]
     pre = var.workers.pre == null ? [] : [for init in var.workers.pre: {
       args = init.args == null ? [] : init.args
       image = init.image == null ? var.workers.image : init.image

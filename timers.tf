@@ -32,7 +32,7 @@ locals {
       user = timer.user
       image = timer.image == null ? local.workers.image : timer.image
       env = timer.env == null ? local.workers.env : timer.env
-      mounts = timer.mounts == null ? local.workers.mounts : [for m in timer.mounts: jsondecode(templatefile("${path.module}/templates/mounts.json.tpl", m))]
+      mounts = timer.mounts == null ? local.workers.mounts : [for m in timer.mounts: jsondecode(templatefile("${path.module}/templates/mount.json.tpl", m))]
       pre = []
 //      pre = timer.pre == null ? [] : [for init in timer.pre: {
 //        args = init.args == null ? [] : init.args
