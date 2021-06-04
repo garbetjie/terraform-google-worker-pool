@@ -73,8 +73,8 @@ locals {
         arg_file = timer.name
         requires = local.cloudsql_systemd_requires
         exec_start_pre = local.cloudsql_systemd_exec_start_pre
-        exec_stop = templatefile("${path.module}/templates/docker-stop.tpl", { name = timer.name })
-        exec_start = templatefile("${path.module}/templates/docker-run.tpl", {
+        exec_stop = null
+        exec_start = join(" ", ["/bin/sh", "/etc/runtime/scripts/run-timer.sh", templatefile("${path.module}/templates/docker-run.tpl", {
           name = timer.name
           env_file = timer.name
           user = timer.user
@@ -83,10 +83,14 @@ locals {
           expose = []
           image = timer.image
           args = [for index, arg in timer.args: "ARG_MAIN_${index}"]
-        })
+        })])
       })
     }
   )
+
+  script_files_timers = {
+    "run-timer.sh" = file("${path.module}/files/script-run-timer.sh")
+  }
 }
 
 output timers {

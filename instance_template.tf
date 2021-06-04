@@ -46,7 +46,7 @@ resource google_compute_instance_template template {
         ],
 
         // Populate script files.
-        [for file, content in merge(local.script_files_cloudsql, local.script_files_health_check):
+        [for file, content in merge(local.script_files_cloudsql, local.script_files_health_check, local.script_files_timers):
           { path = "/etc/runtime/scripts/${file}", permissions = "0644", content = content }
         ],
       ),
