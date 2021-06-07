@@ -8,7 +8,7 @@ background workers running in a Docker container.
 
 * [Introduction](#introduction)
 * [Requirements](#requirements)
-* [Installation](#installation)
+* [Terminology](#terminology)
 * [Usage](#usage)
   * [CloudSQL](#cloudsql)
   * [Timers](#timers)
@@ -35,6 +35,7 @@ through a shared volume.
 # Requirements
 
 * Terraform >= 0.14
+* [Google provider](https://registry.terraform.io/providers/hashicorp/google/latest)
 
 # Terminology
 
