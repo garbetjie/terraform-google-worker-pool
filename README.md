@@ -1,8 +1,8 @@
 Terraform Module: Google Workers
 ================================
 
-A Terraform module for the [Google Cloud Platform](https://cloud.google.com) that makes it easy to create a group of
-background workers running in a Docker container.
+A Terraform module for the [Google Cloud Platform](https://cloud.google.com) that makes it easy to create and configure
+a pool of instances that run multiple background processors in Docker containers.
 
 # Table Of Contents
 
