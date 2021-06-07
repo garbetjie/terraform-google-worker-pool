@@ -13,6 +13,18 @@ variable health_check {
   }
 }
 
+output health_check {
+  value = {
+    enabled = local.health_check_enabled
+    port = local.health_check_port
+    name = local.health_check_name
+    interval = local.health_check_interval
+    healthy_threshold = local.health_check_healthy_threshold
+    unhealthy_threshold = local.health_check_unhealthy_threshold
+    initial_delay = local.health_check_initial_delay
+  }
+}
+
 locals {
   health_check_enabled = var.health_check.enabled
   health_check_port = var.health_check.port == null ? 4144 : var.health_check.port

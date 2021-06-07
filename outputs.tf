@@ -66,14 +66,6 @@ output preemptible {
   value = var.preemptible
 }
 
-output restart_interval {
-  value = var.restart_interval
-}
-
-output restart_policy {
-  value = var.restart_policy
-}
-
 output runcmd {
   value = var.runcmd
 }

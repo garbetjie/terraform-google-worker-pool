@@ -109,11 +109,12 @@ output workers {
     image = local.workers.image
     replicas = local.workers.replicas
     expose = local.workers.expose
-    name = local.workers.name
     args = local.workers.args
     env = local.workers.env
     user = local.workers.user
     pre = local.workers.pre
     mounts = local.workers.mounts
+    restart_policy = local.workers.restart_policy
+    restart_interval = local.workers.restart_interval
   }
 }
