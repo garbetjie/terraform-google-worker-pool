@@ -1,11 +1,19 @@
 [Unit]
-Requires=docker.service ${join(" ", requires)}
-After=docker.service ${join(" ", requires)}
+Requires=${join(" ", concat(["docker.service"], lookup(Unit, "Requires", [])))}
+After=${join(" ", concat(["docker.service"], lookup(Unit, "After", [])))}
 
 [Service]
-Type=${type}
+Type=${lookup(Service, "Type", "exec")}
 Environment=HOME=/etc/runtime
-EnvironmentFile=/etc/runtime/args/${arg_file}
-%{ if length(exec_start_pre) > 0 }ExecStartPre=${join("\nExecStartPre=", [for p in exec_start_pre: trimspace(p)])}%{~ endif }
-ExecStart=${trimspace(exec_start)}
-%{ if exec_stop != null }ExecStop=${trimspace(exec_stop)}%{~ endif }
+%{ if lookup(Service, "EnvironmentFile", null) != null }EnvironmentFile=${Service.EnvironmentFile}
+%{ endif ~}
+%{ if lookup(Service, "Restart", null) != null }Restart=${Service.Restart}
+%{ endif ~}
+%{ if lookup(Service, "RestartSec", null) != null }RestartSec=${Service.RestartSec}
+%{ endif ~}
+%{ if length(lookup(Service, "ExecStartPre", [])) > 0 }ExecStartPre=${join("\nExecStartPre=", [for esp in Service.ExecStartPre: trimspace(esp)])}
+%{ endif ~}
+%{ if lookup(Service, "ExecStart", null) != null }ExecStart=${trimspace(Service.ExecStart)}
+%{ endif ~}
+%{ if lookup(Service, "ExecStop", null) != null }ExecStop=${trimspace(Service.ExecStop)}
+%{ endif ~}

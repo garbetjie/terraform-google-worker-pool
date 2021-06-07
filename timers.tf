@@ -29,7 +29,7 @@ locals {
       name = "timer-${format("%02d", index + 1)}"
       schedule = timer.schedule
       args = timer.args == null ? [] : timer.args
-      user = timer.user
+      user = timer.user == null ? local.workers.user : null
       image = timer.image == null ? local.workers.image : timer.image
       env = timer.env == null ? local.workers.env : timer.env
       mounts = timer.mounts == null ? local.workers.mounts : [for m in timer.mounts: jsondecode(templatefile("${path.module}/templates/mount.json.tpl", m))]
@@ -69,21 +69,25 @@ locals {
     },
     {for timer in local.timers:
       "${timer.name}.service" => templatefile("${path.module}/templates/systemd-service.tpl", {
-        type = "exec"
-        arg_file = timer.name
-        requires = local.cloudsql_systemd_requires
-        exec_start_pre = local.cloudsql_systemd_exec_start_pre
-        exec_stop = null
-        exec_start = join(" ", ["/bin/sh", "/etc/runtime/scripts/run-timer.sh", templatefile("${path.module}/templates/docker-run.tpl", {
-          name = timer.name
-          env_file = timer.name
-          user = timer.user
-          labels = { part-of = "timer" }
-          mounts = concat(local.cloudsql_mounts, timer.mounts)
-          expose = []
-          image = timer.image
-          args = [for index, arg in timer.args: "ARG_MAIN_${index}"]
-        })])
+        Unit = {
+          Requires = local.cloudsql_systemd_requires
+          After = local.cloudsql_systemd_requires
+        }
+        Service = {
+          Type = "oneshot"
+          EnvironmentFile = "/etc/runtime/args/${timer.name}"
+          ExecStartPre = local.cloudsql_systemd_exec_start_pre
+          ExecStart = join(" ", ["/bin/sh", "/etc/runtime/scripts/run-timer.sh", templatefile("${path.module}/templates/docker-run.tpl", {
+            name = timer.name
+            env_file = timer.name
+            user = timer.user
+            labels = { part-of = "timer" }
+            mounts = concat(local.cloudsql_mounts, timer.mounts)
+            expose = []
+            image = timer.image
+            args = [for index, arg in timer.args: "ARG_MAIN_${index}"]
+          })])
+        }
       })
     }
   )

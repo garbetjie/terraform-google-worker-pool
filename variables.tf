@@ -61,23 +61,6 @@ variable preemptible {
   description = "Whether or not to create preemptible instances."
 }
 
-variable restart_interval {
-  type = number
-  default = 5
-  description = "Number of seconds to wait before restarting a failed worker."
-}
-
-variable restart_policy {
-  type = string
-  default = "always"
-  description = "Restart policy to apply to failed workers."
-
-  validation {
-    condition = contains(["no", "on-success", "on-failure", "on-abnormal", "on-watchdog", "on-abort", "always"], var.restart_policy)
-    error_message = "Restart policy must be one of [always, no, on-success, on-failure, on-abnormal, on-watchdog, on-abort]."
-  }
-}
-
 variable runcmd {
   type = list(string)
   default = []
