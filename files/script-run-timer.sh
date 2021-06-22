@@ -16,4 +16,4 @@ for arg do
 done
 
 # Execute the original command.
-echo "$@"
+exec "$@"
