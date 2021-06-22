@@ -1,6 +1,9 @@
 Changelog
 =========
 
+* **2.0.1**
+  * Replaced erroneous `echo` with `exec` in timer script.
+
 * **2.0.0**
     * Completely refactor input configuration.
     * Default most attributes for timers to those supplied for workers.
